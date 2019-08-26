@@ -5,5 +5,9 @@ import board
 
 fase = board.Board()
 fase.set_values()
-fase.print_board()
-print("\nRoberto")
+#fase.print_board()
+
+game = Game()
+game.play()
+
+print("Game Closed!")
