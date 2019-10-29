@@ -13,16 +13,16 @@ class Board(pygame.sprite.Sprite):
         self.level = np.zeros((9, 9), dtype=object)
         for x in range(9):
             for y in range(9):
-                self.level[x][y] = piece.Piece()
+                self.level[x][y] = piece.Simple(x,y,6)
     
-    def set_values(self):
+    def get_board(self):
+
+        list_pieces = []
         for i in range(9):
             for j in range(9):
-                self.level[i][j].set_value(str(i) + str(j))
-    
-    def print_board(self):
-        for i in range(9):
-            print("|", end="")
-            for j in range(9):
-                print("", self.level[i][j].get_value(), end="")
-            print(" |")
+                list_pieces.append(
+                    self.level[i][j].get_piece()
+                )
+        
+        return list_pieces
+
