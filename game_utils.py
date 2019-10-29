@@ -4,7 +4,7 @@ from pygame.locals import *
 import os, sys
 
 """ Carrega a imagem, retornando a surface e rect """
-def load_image(name, colorkey=None):
+def load_image(name, colorkey=None, size=(60,60)):
 
     try:
         image = pygame.image.load(name)
@@ -13,7 +13,7 @@ def load_image(name, colorkey=None):
         raise SystemExit(message)
     
     image = image.convert()
-    image = pygame.transform.scale(image, (60,60))
+    image = pygame.transform.scale(image, size)
     if colorkey is not None:
         if colorkey is -1:
             colorkey = image.get_at((0,0))

@@ -170,8 +170,8 @@ class Game(pygame.sprite.Sprite):
         background = background.convert()
         background.fill(WHITE)
 
+        # Draw the pieces
         pieces = self.board.get_board()
-
         for image, rect in pieces:
             background.blit(image, rect)
 

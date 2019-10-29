@@ -12,8 +12,8 @@ serve como uma classe abstrata
 '''
 class Piece(pygame.sprite.Sprite):
 
-    topleft = (20,20)
-    space = 5
+    topleft = (225, 25)
+    space = 2
 
     def __init__(self, x,y):
         pygame.sprite.Sprite.__init__(self)
@@ -45,7 +45,7 @@ class Objective(Piece):
 
     # Sprite da imagem
     sprite = path_image + \
-        "pieces/objective/cane.png"
+        "pieces/objective/0.png"
 
     def __init__(self, x,y):
         Piece.__init__(self, x, y)
@@ -80,8 +80,8 @@ class Simple(Objective):
         
         # Atualiza a posição da peça
         self.rect.topleft = self.topleft
-        self.rect.left += self.space + self.x * self.rect.width
-        self.rect.top  += self.space + self.y * self.rect.height
+        self.rect.left += self.x * (self.space + self.rect.width)
+        self.rect.top  += self.y * (self.space + self.rect.height)
 
 '''
 Representa uma peça listrada, que possui
