@@ -25,6 +25,9 @@ class Piece(pygame.sprite.Sprite):
     
     def get_value(self):
         return self.value
+
+    def get_pos(self):
+        return (self.x, self.y)
     
     def get_piece(self):
         return (self.image, self.rect)
