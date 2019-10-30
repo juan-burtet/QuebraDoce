@@ -92,8 +92,18 @@ class Game(pygame.sprite.Sprite):
         # Game Over
     
     # Adiciona um texto com a fonte de NES na tela
-    def _add_nes_text(self, string, x=size[0]/2, y=size[1]/2, text_size=60):
+    def _add_nes_text(
+        self, 
+        string, 
+        text_size=60,
+        centerx=None, 
+        centery=None, 
+        left=None,
+        right=None,
+        top=None,
+        bottom=None):
         
+        # Espaço de sombra
         plus = 2
 
         # Inicializa a lista
@@ -204,8 +214,26 @@ class Game(pygame.sprite.Sprite):
         return p
 
     # Imprime toda a informação do jogo na tela
-    def _print_game_info(self):
-        pass
+    def _print_game_info(self, background):
+
+        # Caixa onde fica o modo de jogo
+        pygame.draw.rect(
+            background,
+            BLACK,
+            (15, 25, 190, 185),
+            10
+        )
+
+        texts, pos = self._add_nes_text(
+            "GAME MODE",
+        )
+        
+        for t, p in zip(texts,pos):
+            p.left = 
+            background.blit(t,p)
+
+
+
 
     # Trabalha todas as operação da tela do jogo    
     def _game_screen(self):
@@ -247,7 +275,7 @@ class Game(pygame.sprite.Sprite):
         background.fill(WHITE)
 
         # Imprime as informações do jogo
-        self._print_game_info()
+        self._print_game_info(background)
         
         # Imprime as peças na tela
         for pieces in self.board.level:

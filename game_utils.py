@@ -3,6 +3,10 @@ import numpy as np
 from pygame.locals import *
 import os, sys
 
+fonts = {}
+fonts['NES'] = 'assets/fonts/pixel_nes.otf'
+
+
 """ Carrega a imagem, retornando a surface e rect """
 def load_image(name, colorkey=None, size=(60,60)):
 
@@ -36,3 +40,4 @@ def load_sound(name):
         raise SystemExit(message)
     
     return sound
+
