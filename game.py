@@ -96,13 +96,19 @@ class Game(pygame.sprite.Sprite):
         self, 
         string, 
         text_size=60,
-        centerx=None, 
-        centery=None, 
+        reverse=False,
+        centerx=size[0]/2, 
+        centery=size[1]/2, 
         left=None,
         right=None,
         top=None,
         bottom=None):
         
+        # Ordem das cores
+        colors = [WHITE, BLACK]
+        if reverse:
+            colors = list(reversed(colors))
+
         # Espaço de sombra
         plus = 2
 
@@ -114,11 +120,24 @@ class Game(pygame.sprite.Sprite):
         font = pygame.font.Font(font_path, text_size)
 
         # Cria o texto Inicial
-        front = font.render(string, 1, WHITE)
-        frontpos = front.get_rect(centerx=x, centery=y)
+        front = font.render(string, 1, colors[0])
+        frontpos = front.get_rect(centerx=centerx, centery=centery)
+
+        # Atualiza com as posições passadas
+        if left:
+            frontpos.left = left
+        
+        if right:
+            frontpos.right = right
+        
+        if top:
+            frontpos.top = top
+        
+        if bottom:
+            frontpos.bottom = bottom
 
         # Cria a sombra
-        back = font.render(string, 1, BLACK)
+        back = font.render(string, 1, colors[1])
         backpos = back.get_rect()
         backpos.right = frontpos.right + plus
         backpos.bottom = frontpos.bottom + plus
@@ -154,7 +173,7 @@ class Game(pygame.sprite.Sprite):
             # - A SIMPLE MATCH THREE GAME -
             texts, textpos = self._add_nes_text(
                 "- A SIMPLE MATCH THREE GAME -",
-                y=size[1]/2 + 40,
+                centery=size[1]/2 + 40,
                 text_size=15)
             background.blit(texts[0], textpos[0])
             background.blit(texts[1], textpos[1])
@@ -163,7 +182,7 @@ class Game(pygame.sprite.Sprite):
             if self.frame % 60 <= 30:
                 texts, textpos = self._add_nes_text(
                     "CLICK WITH THE MOUSE!",
-                    y= size[1] - 30,
+                    centery= size[1] - 30,
                     text_size=20)
                 background.blit(texts[0], textpos[0])
                 background.blit(texts[1], textpos[1])
@@ -224,22 +243,21 @@ class Game(pygame.sprite.Sprite):
             10
         )
 
+        # Imprime a String: "Modo de Jogo"
         texts, pos = self._add_nes_text(
             "GAME MODE",
+            text_size=25,
+            reverse=True,
+            left=25,
+            top=30,
         )
-        
         for t, p in zip(texts,pos):
-            p.left = 
             background.blit(t,p)
-
-
-
+        
+        # Imprime o modo do jogo
 
     # Trabalha todas as operação da tela do jogo    
     def _game_screen(self):
-        
-        # Retorna as peças do campo
-        #pieces = self.board.get_board()
 
         # Eventos possiveis da tela do jogo
         for event in self.events:
