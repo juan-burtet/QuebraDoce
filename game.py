@@ -33,6 +33,14 @@ PIECE_COLORS = [
     PURPLE
 ]
 
+'''
+Cores dos modos
+'''
+MODE_COLORS = {}
+MODE_COLORS['POINTS'] = ORANGE
+MODE_COLORS['BLOCKS'] = BLUE
+MODE_COLORS['OBJECTIVE'] = GREEN
+MODE_COLORS['MIX'] = PURPLE
 
 class Game(pygame.sprite.Sprite):
 
@@ -116,19 +124,19 @@ class Game(pygame.sprite.Sprite):
         frontpos = front.get_rect(centerx=centerx, centery=centery)
 
         # Se tiver posição esquerda, atualiza
-        if left:
+        if left is not None:
             frontpos.left = left
         
         # Se tiver posição direita, atualiza
-        if right:
+        if right is not None:
             frontpos.right = right
         
         # Se tiver posição do topo, atualiza
-        if top:
+        if top is not None:
             frontpos.top = top
         
         # Se tiver posição de baixo, atualiza
-        if bottom:
+        if bottom is not None:
             frontpos.bottom = bottom
 
         # Cria a sombra
@@ -185,7 +193,7 @@ class Game(pygame.sprite.Sprite):
         return background
 
     # Desenha um quadrado em volta da posição da peça
-    def _draw_square(self, background, piece, color=GREY, width=3):
+    def _draw_square(self, background, piece, color=BLACK, width=3):
 
         # Pega o tamanho do quadrado
         l = piece.rect.left -width
@@ -227,18 +235,47 @@ class Game(pygame.sprite.Sprite):
         # Retorna a peça valida
         return p
 
-    # Imprime toda a informação do jogo na tela
-    def _print_game_info(self, background):
+    # Retorna a quantidade de pontos do jogo
+    def _get_points(self):
 
+        value = str(self.board.points)
+        value = ''.join(reversed(value))
+
+        size = len(value)
+        for i in range(size, 9):
+            value += '0'
+
+        number = ''
+        for i, c in enumerate(value):
+            number += c
+            if i % 3 == 2:
+                number += '.'
+
+        if number[-1] == '.':
+            number = number[:-1]
+
+        number = ''.join(reversed(number))
+        return number
+
+    # Imprime o modo de jogo na tela
+    def _print_game_mode(self, background):
+        
+        # Caixa onde fica o modo de jogo
+        pygame.draw.rect(
+            background,
+            WHITE,
+            (15, 25, 190, 90),
+        )
+        
         # Caixa onde fica o modo de jogo
         pygame.draw.rect(
             background,
             BLACK,
-            (15, 25, 190, 185),
+            (15, 25, 190, 90),
             10
         )
 
-        # Imprime a String: "Modo de Jogo"
+        # Imprime a String: "GAME MODE"
         texts, pos = self._add_nes_text(
             "GAME MODE",
             text_size=25,
@@ -248,8 +285,166 @@ class Game(pygame.sprite.Sprite):
         )
         for t, p in zip(texts,pos):
             background.blit(t,p)
+
+        # Desenha uma linha que separa as strings
+        pygame.draw.line(
+            background, 
+            BLACK, 
+            (30, 60), 
+            (190, 60), 
+            2
+        )
         
         # Imprime o modo do jogo
+        texts, pos = self._add_nes_text(
+            self.board.mode,
+            text_size=25,
+            reverse=True,
+            centerx=pos[1].centerx,
+            top=pos[1].bottom + 10,
+        )
+        for t, p in zip(texts,pos):
+            background.blit(t,p)
+        
+        # Desenha um quadrado em volta do modo do jogo
+        pygame.draw.rect(
+            background,
+            MODE_COLORS[self.board.mode],
+            (pos[1].left - 3,
+            pos[1].top + 5, 
+            pos[1].width + 5, 
+            pos[1].height - 7),
+            3
+        )
+
+    # Imprime a quantidade de pontos na tela
+    def _print_game_points(self, background):
+
+        # Pinta o fundo da caixa
+        rect = pygame.draw.rect(
+            background,
+            WHITE,
+            (10, 130, 200, 90),
+        )
+
+        # Caixa onde fica a pontuação
+        rect = pygame.draw.rect(
+            background,
+            BLACK,
+            (10, 130, 200, 90),
+            10
+        )
+
+        # Imprime a String: "SCORE"
+        texts, pos = self._add_nes_text(
+            "SCORE",
+            text_size=40,
+            reverse=True,
+            # left=25,
+            centerx = rect.centerx,
+            top=130,
+        )
+        for t, p in zip(texts,pos):
+            background.blit(t,p)
+
+        # Desenha uma linha que separa as strings
+        pygame.draw.line(
+            background, 
+            BLACK, 
+            (30, 175), 
+            (190, 175), 
+            2
+        )
+
+        # Imprime a quantidade de pontos
+        texts, pos = self._add_nes_text(
+            self._get_points(),
+            text_size=24,
+            reverse=True,
+            right=pos[1].right + 15,
+            top=pos[1].bottom,
+        )
+        for t, p in zip(texts,pos):
+            background.blit(t,p)
+
+    # Imprime a quantidade de movimentos restantes no jogo
+    def _print_game_moves(self, background):
+        
+        # Pinta o fundo do campo
+        rect = pygame.draw.rect(
+            background,
+            WHITE,
+            (15, 235, 190, 105),
+        )
+
+        # Faz o campo de movimentos
+        rect = pygame.draw.rect(
+            background,
+            BLACK,
+            (15, 235, 190, 105),
+            10
+        )
+
+        # Imprime a String: "MOVES"
+        texts, pos = self._add_nes_text(
+            "MOVES",
+            text_size=40,
+            reverse=True,
+            centerx=rect.centerx+2,
+            top=rect.top,
+        )
+        for t, p in zip(texts,pos):
+            background.blit(t,p)
+
+        # Desenha uma linha para separar as strings
+        pygame.draw.line(
+            background, 
+            BLACK, 
+            (pos[1].left - 2, pos[1].bottom), 
+            (pos[1].right - 5, pos[1].bottom), 
+            2
+        )
+
+        # Imprime a quantidade de movimentos
+        texts, pos = self._add_nes_text(
+            str(self.board.moves),
+            text_size=50,
+            reverse=True,
+            centerx=pos[1].centerx,
+            centery=pos[1].centery + 47,
+        )
+        for t, p in zip(texts,pos):
+            background.blit(t,p)
+
+        pass
+
+    # Imprime os objetivos da partida
+    def _print_game_objectives(self, background):
+
+        # Faz o campo de objetivos
+        rect = pygame.draw.rect(
+            background,
+            WHITE,
+            (15, 355, 190, 225),
+        )
+
+        # Faz o campo de objetivos
+        rect = pygame.draw.rect(
+            background,
+            BLACK,
+            (15, 355, 190, 225),
+            10
+        )
+
+        pass
+
+    # Imprime toda a informação do jogo na tela
+    def _print_game_info(self, background):
+
+        self._print_game_mode(background)
+        self._print_game_points(background)
+        self._print_game_moves(background)
+        self._print_game_objectives(background)
 
     # Trabalha todas as operação da tela do jogo    
     def _game_screen(self):
@@ -285,16 +480,38 @@ class Game(pygame.sprite.Sprite):
         # Cria o background da fase
         background = pygame.Surface(self.screen.get_size())
         background = background.convert()
-        background.fill(WHITE)
+        background.fill(MODE_COLORS[self.board.mode])
 
         # Imprime as informações do jogo
         self._print_game_info(background)
         
+        # Adiciona a cor branca ao fundo
+        # Imprime o contorno
+        pygame.draw.rect(
+            background,
+            WHITE,
+            (self.board.level[0][0].rect.left -5,
+            self.board.level[0][0].rect.top -5,
+            self.board.level[8][8].rect.right -215,
+            self.board.level[8][8].rect.bottom -15),
+        )
+
         # Imprime as peças na tela
         for pieces in self.board.level:
             for p in pieces:
                 background.blit(p.image, p.rect)
                 background = self._draw_square(background, p)
+        
+        # Imprime o contorno
+        pygame.draw.rect(
+            background,
+            BLACK,
+            (self.board.level[0][0].rect.left -5,
+            self.board.level[0][0].rect.top -5,
+            self.board.level[8][8].rect.right -215,
+            self.board.level[8][8].rect.bottom -15),
+            10
+        )
         
         # Imprime a peça escolhida
         if self.pick is not None:
