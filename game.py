@@ -76,7 +76,7 @@ class Game(pygame.sprite.Sprite):
             self.events = pygame.event.get()
             for event in self.events:
                 if event.type == pygame.QUIT: 
-                    sys.exit()
+                    going = False
 
             if self.status == 'start':
                 background = self._start_screen()
@@ -92,17 +92,9 @@ class Game(pygame.sprite.Sprite):
         # Game Over
     
     # Adiciona um texto com a fonte de NES na tela
-    def _add_nes_text(
-        self, 
-        string, 
-        text_size=60,
-        reverse=False,
-        centerx=size[0]/2, 
-        centery=size[1]/2, 
-        left=None,
-        right=None,
-        top=None,
-        bottom=None):
+    def _add_nes_text(self, string, text_size=60, reverse=False, 
+            centerx=size[0]/2, centery=size[1]/2, left=None, 
+            right=None, top=None, bottom=None):
         
         # Ordem das cores
         colors = [WHITE, BLACK]
@@ -123,16 +115,19 @@ class Game(pygame.sprite.Sprite):
         front = font.render(string, 1, colors[0])
         frontpos = front.get_rect(centerx=centerx, centery=centery)
 
-        # Atualiza com as posições passadas
+        # Se tiver posição esquerda, atualiza
         if left:
             frontpos.left = left
         
+        # Se tiver posição direita, atualiza
         if right:
             frontpos.right = right
         
+        # Se tiver posição do topo, atualiza
         if top:
             frontpos.top = top
         
+        # Se tiver posição de baixo, atualiza
         if bottom:
             frontpos.bottom = bottom
 
