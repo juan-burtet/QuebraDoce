@@ -16,7 +16,7 @@ def load_image(name, colorkey=None, size=(60,60)):
         print('Cannot load image:', name)
         raise SystemExit(message)
     
-    image = image.convert()
+    image = image.convert_alpha()
     image = pygame.transform.scale(image, size)
     if colorkey is not None:
         if colorkey is -1:

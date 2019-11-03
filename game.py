@@ -5,6 +5,7 @@ from pygame.locals import *
 # Arquivos próprios
 import piece
 import board
+import game_utils
 
 size = width, height = 800, 600
 
@@ -13,7 +14,7 @@ Conjunto de Cores
 '''
 BLACK  = (  0,   0,   0)
 WHITE  = (245, 245, 245)
-GREY   = ( 80,  80,  80)
+GREY   = (180, 180, 180)
 RED    = (250,  24,  22)
 ORANGE = (250, 162,   8)
 YELLOW = (244, 235,   5)
@@ -51,6 +52,7 @@ class Game(pygame.sprite.Sprite):
         self.color = random.choice(PIECE_COLORS) # cor da tela
         self.board = None # Campo do jogo
         self.pick = None # Peça escolhida
+        self.objective_image = None # Imagem do objeto
 
     def _pygame_init(self):
         # Initialize Everything
@@ -147,10 +149,22 @@ class Game(pygame.sprite.Sprite):
 
         return [back,front], [backpos, frontpos]
 
+    # Inicializa a imagem do icone
+    def _get_objective_image(self):
+        
+        if self.objective_image is None:
+            self.objective_image = game_utils.load_image(
+                "assets/sprite/pieces/objective/0.png",
+                size=(35,35)
+            )
+
     # Inicializa as informações necessárias pro Game_Screen
     def _set_game_screen(self):
         self.status = 'game'
         self.board = board.Board()
+        self._get_objective_image()
+        self.blocks = self.board.blocks
+        self.objectives = self.board.canes
 
     # Trabalha todas as operações da tela inicial
     def _start_screen(self):
@@ -417,12 +431,37 @@ class Game(pygame.sprite.Sprite):
             background.blit(t,p)
 
         pass
+    
+    # Retorna a quantidade dos objetivos especificos
+    def _get_objectives_string(self, a, b):
+        string = ""
+
+        string += str(a - b)
+        string += "/"
+        string += str(a)
+
+        return string
+
+    # Retorna a quantidade pontos necessários para ganhar
+    def _get_points_string(self):
+
+        points = self.board.w_points
+        m = int(points/1000000)
+        
+        if m > 0:
+            return ("%dM" % m)
+        
+        k = int(points/1000)
+        if k > 0:
+            return ("%dK" % k)
+        
+        return str(points)
 
     # Imprime os objetivos da partida
     def _print_game_objectives(self, background):
 
-        # Faz o campo de objetivos
-        rect = pygame.draw.rect(
+        # Pinta o fundo do campo de objetivos
+        pygame.draw.rect(
             background,
             WHITE,
             (15, 355, 190, 225),
@@ -436,7 +475,176 @@ class Game(pygame.sprite.Sprite):
             10
         )
 
-        pass
+        # Imprime a String: "OBJECTIVES"
+        texts, pos = self._add_nes_text(
+            "GOALS",
+            text_size=40,
+            reverse=True,
+            centerx=rect.centerx+2,
+            top=rect.top,
+        )
+        for t, p in zip(texts,pos):
+            background.blit(t,p)
+
+        # Desenha uma linha para separar as strings
+        pygame.draw.line(
+            background, 
+            BLACK, 
+            (pos[1].left - 2, pos[1].bottom), 
+            (pos[1].right - 5, pos[1].bottom), 
+            2
+        )
+
+        ''' Quantidade de Pontos Necessários. '''
+
+        # Fundo do campo onde fica os pontos
+        pygame.draw.rect(
+            background,
+            GREY,
+            (pos[1].left-5, pos[1].bottom +10,
+            155, 40),
+        )
+
+        # Contorno do campo onde fica os pontos
+        rect_b = pygame.draw.rect(
+            background,
+            BLACK,
+            (pos[1].left-5, pos[1].bottom +10,
+            155, 40),
+            3
+        )
+
+        # quantidade de pontos necessário
+        texts, pos = self._add_nes_text(
+            "PTS",
+            text_size=30,
+            reverse=True,
+            left=pos[1].left,
+            top=pos[1].bottom +10,
+        )
+        for t, p in zip(texts,pos):
+            background.blit(t,p)
+        
+        # quantidade de pontos necessário
+        texts_aux, pos_aux = self._add_nes_text(
+            self._get_points_string(),
+            text_size=22,
+            reverse=True,
+            centery=pos[1].centery,
+            centerx=pos[1].right + 40,
+        )
+        for t, p in zip(texts_aux, pos_aux):
+            background.blit(t,p)
+        
+        if self.board.points >= self.board.w_points:
+            self._draw_complete(background, rect_b)
+        
+        ''' Quantidade de Objetivos Necessário. '''
+
+        # Fundo do campo onde fica os pontos
+        pygame.draw.rect(
+            background,
+            GREY,
+            (pos[1].left-5, pos[1].bottom +10,
+            155, 50),
+        )
+
+        # Contorno do campo onde fica os pontos
+        rect_b = pygame.draw.rect(
+            background,
+            BLACK,
+            (pos[1].left-5, pos[1].bottom +10,
+            155, 50),
+            3
+        )
+
+        # Quantidade de objetivos necessário
+        image = self.objective_image[0]
+        rect = self.objective_image[1]
+        rect.left = pos[1].left +10
+        rect.top = pos[1].bottom +18
+        background.blit(image, rect)
+
+        # quantidade de objetivos necessário
+        texts_aux, pos_aux = self._add_nes_text(
+            self._get_objectives_string(self.objectives, self.board.canes),
+            text_size=22,
+            reverse=True,
+            centery=rect.centery,
+            centerx=rect.right + 55,
+        )
+        for t, p in zip(texts_aux, pos_aux):
+            background.blit(t,p)
+
+        if self.board.canes == 0:
+            self._draw_complete(background, rect_b)
+
+        ''' Quantidade de Bloqueios Necessário '''
+
+        # Fundo do campo onde fica os bloqueios
+        pygame.draw.rect(
+            background,
+            GREY,
+            (pos[1].left-5, rect.bottom +15,
+            155, 50),
+        )
+
+        # Contorno do campo onde fica os bloqueios
+        rect_b = pygame.draw.rect(
+            background,
+            BLACK,
+            (pos[1].left-5, rect.bottom +15,
+            155, 50),
+            3
+        )
+
+        # Desenha a borda do bloqueio
+        rect = pygame.draw.rect(
+            background,
+            BLUE,
+            (rect.left, rect.bottom +23,
+            rect.width, rect.height),
+            5
+        )
+
+        # Desenha o quadrado transparente
+        s = pygame.Surface(rect.size)
+        s.set_alpha(128)
+        s.fill(BLUE)
+        background.blit(s, (rect.left, rect.top))
+
+        # quantidade de bloqueios necessário
+        texts, pos = self._add_nes_text(
+            self._get_objectives_string(self.blocks, self.board.blocks),
+            text_size=22,
+            reverse=True,
+            centery=rect.centery,
+            centerx=rect.right + 55,
+        )
+        for t, p in zip(texts,pos):
+            background.blit(t,p)
+
+        if self.board.blocks == 0:
+            self._draw_complete(background, rect_b)
+
+    # Se já tiver completo os objetivos, pinta
+    def _draw_complete(self, background, rect_b):
+
+            pygame.draw.line(
+                background, 
+                RED, 
+                rect_b.topright, 
+                rect_b.bottomleft, 
+                5
+            )
+
+            pygame.draw.line(
+                background, 
+                RED, 
+                rect_b.topleft, 
+                rect_b.bottomright, 
+                5
+            )
 
     # Imprime toda a informação do jogo na tela
     def _print_game_info(self, background):
