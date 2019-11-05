@@ -14,11 +14,11 @@ class Board(pygame.sprite.Sprite):
     def _get_info(self):
         self.mode = 'POINTS'
 
-        self.points = 0
-        self.w_points = 0
-        self.blocks = 0
-        self.canes = 0
-        self.moves = 30
+        self.points = 123456789
+        self.w_points = 124456789
+        self.blocks = 12
+        self.canes = 12
+        self.moves = 99
 
     def _create_level(self):
         self.level = np.zeros((9, 9), dtype=object)
