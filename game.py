@@ -250,8 +250,11 @@ class Game(pygame.sprite.Sprite):
         if x == y:
             return None
         
-        # Retorna a peça valida
-        return p
+        # Testa o movimento
+        self.board.test_move(self.pick, p)
+
+        # Retorna nenhuma peça seleciona
+        return None
 
     # Retorna a quantidade de pontos do jogo
     def _get_points(self):

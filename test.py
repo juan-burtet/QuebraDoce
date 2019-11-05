@@ -1,4 +1,7 @@
-modosdeJogo = ['Geleia', 'Objetivo', 'Pontuação']
+class Oi:
+    pass
 
-pontuação
-quantidade de: "Objetivo", "Geleia"
+oi =  Oi()
+
+x = oi.x
+print(x)

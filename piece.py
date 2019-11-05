@@ -32,6 +32,12 @@ class Piece(pygame.sprite.Sprite):
     
     def get_piece(self):
         return (self.image, self.rect)
+    
+    def update_rect(self):
+        # Atualiza a posição da peça
+        self.rect.topleft = self.topleft
+        self.rect.left += self.x * (self.space + self.rect.width)
+        self.rect.top  += self.y * (self.space + self.rect.height)
 
 '''
 Representa uma área onde não pode possuir peças
@@ -47,10 +53,7 @@ class Block(Piece):
         self.image, self.rect = load_image(
             self.sprite, -1)
         
-        # Atualiza a posição da peça
-        self.rect.topleft = self.topleft
-        self.rect.left += self.x * (self.space + self.rect.width)
-        self.rect.top  += self.y * (self.space + self.rect.height)
+        self.update_rect()
 
 '''
 Representa uma peça de Objetivo que precisa ser
@@ -69,10 +72,7 @@ class Objective(Piece):
         self.image, self.rect = load_image(
             self.sprite, -1)
         
-        # Atualiza a posição da peça
-        self.rect.topleft = self.topleft
-        self.rect.left += self.x * (self.space + self.rect.width)
-        self.rect.top  += self.y * (self.space + self.rect.height)
+        self.update_rect()
 
 
 '''
@@ -98,10 +98,7 @@ class Simple(Objective):
         self.image, self.rect = load_image(
             self.sprites[self.type], -1)
 
-        # Atualiza a posição da peça
-        self.rect.topleft = self.topleft
-        self.rect.left += self.x * (self.space + self.rect.width)
-        self.rect.top  += self.y * (self.space + self.rect.height)
+        self.update_rect()
 
 class Protection(Simple):
 
@@ -119,10 +116,7 @@ class Protection(Simple):
         s.blit(self.image, (self.rect.left, self.rect.top))
         self.image = s
 
-        # Atualiza a posição da peça
-        self.rect.topleft = self.topleft
-        self.rect.left += self.x * (self.space + self.rect.width)
-        self.rect.top  += self.y * (self.space + self.rect.height)
+        self.update_rect()
 
 
     pass
