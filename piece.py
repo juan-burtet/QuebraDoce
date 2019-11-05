@@ -5,6 +5,7 @@ from game_utils import *
 import random
 
 path_image = "assets/sprite/"
+BLUE   = (146, 179, 255)
 
 '''
 Representa uma simples Peça no Tabuleiro,
@@ -37,8 +38,19 @@ Representa uma área onde não pode possuir peças
 '''
 class Block(Piece):
     
+    sprite = path_image + \
+        "pieces/block/0.png"
+
     def __init__(self, x,y):
         Piece.__init__(self, x,y)
+
+        self.image, self.rect = load_image(
+            self.sprite, -1)
+        
+        # Atualiza a posição da peça
+        self.rect.topleft = self.topleft
+        self.rect.left += self.x * (self.space + self.rect.width)
+        self.rect.top  += self.y * (self.space + self.rect.height)
 
 '''
 Representa uma peça de Objetivo que precisa ser
@@ -56,6 +68,11 @@ class Objective(Piece):
         # Imagem e o rect da sprite
         self.image, self.rect = load_image(
             self.sprite, -1)
+        
+        # Atualiza a posição da peça
+        self.rect.topleft = self.topleft
+        self.rect.left += self.x * (self.space + self.rect.width)
+        self.rect.top  += self.y * (self.space + self.rect.height)
 
 
 '''
@@ -80,11 +97,35 @@ class Simple(Objective):
         # Imagem e o rect da sprite
         self.image, self.rect = load_image(
             self.sprites[self.type], -1)
-        
+
         # Atualiza a posição da peça
         self.rect.topleft = self.topleft
         self.rect.left += self.x * (self.space + self.rect.width)
         self.rect.top  += self.y * (self.space + self.rect.height)
+
+class Protection(Simple):
+
+    def __init__(self, x, y, n):
+
+        Simple.__init__(self, x, y, n)
+        
+        # Imagem e o rect da sprite
+        self.image, self.rect = load_image(
+            self.sprites[self.type], -1)
+        
+        # Desenha o quadrado transparente
+        s = pygame.Surface(self.rect.size)
+        s.fill(BLUE)
+        s.blit(self.image, (self.rect.left, self.rect.top))
+        self.image = s
+
+        # Atualiza a posição da peça
+        self.rect.topleft = self.topleft
+        self.rect.left += self.x * (self.space + self.rect.width)
+        self.rect.top  += self.y * (self.space + self.rect.height)
+
+
+    pass
 
 '''
 Representa uma peça listrada, que possui

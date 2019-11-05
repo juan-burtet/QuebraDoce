@@ -41,3 +41,32 @@ def load_sound(name):
     
     return sound
 
+""" Carrega uma fase de um arquivo csv. """
+def load_level(file_csv):
+
+    # Checa se o arquivo existe
+    if os.path.exists(file_csv):
+        file = open(file_csv, "r")
+    else:
+        print("File don't Exist!")
+        exit()
+    
+    # Inicia a leitura de linhas
+    line = file.readline()
+
+    # Recebe a informação dos campos
+    info = [int(x) for x in line.split(',')]
+
+    level = []
+    for i in range(9):
+        line = file.readline()
+        level.append([int(x) for x in line.split(',')])
+    
+    return info, level
+
+#load_level("levels/example.csv")
+
+        
+
+
+

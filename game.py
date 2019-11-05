@@ -161,7 +161,7 @@ class Game(pygame.sprite.Sprite):
     # Inicializa as informações necessárias pro Game_Screen
     def _set_game_screen(self):
         self.status = 'game'
-        self.board = board.Board()
+        self.board = board.Board("levels/example.csv")
         self._get_objective_image()
         self.blocks = self.board.blocks
         self.objectives = self.board.canes
@@ -227,10 +227,14 @@ class Game(pygame.sprite.Sprite):
     # Checa se a peça selecionada é válida
     def _check_picked_piece(self, p):
 
+        # Se clicou em um bloco, retorna nada
+        if type(p) is piece.Block or type(p) is piece.Objective:
+            return None
+
         # Se não tiver nenhuma escolhida,
         # retorna a tocada
         if self.pick is None:
-            return p
+                return p
         
         # Pega a posição das duas peças
         x = abs(self.pick.x - p.x)
