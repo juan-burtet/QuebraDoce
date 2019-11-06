@@ -172,36 +172,6 @@ class Board(pygame.sprite.Sprite):
         self.level[p1.x][p1.y] = p1
         self.level[p2.x][p2.y] = p2
 
-    # Checa todas as posições da peça atual até a mais pra direita,
-    # para encontrar combinações
-    def _check_line(self, p, move):
-        
-        begin = p.x +1
-        y = p.y
-        count = 1
-        for x in range(begin, 9):
-            if self.level[x][y].type == p.type:
-                count +=1
-            else:
-                break
-        
-        return count
-    
-    # Checa todas posições da peça atual até a mais pra baixo,
-    # para encontrar combinações
-    def _check_column(self, p, move):
-        
-        begin = p.y +1
-        x = p.x
-        count = 1
-        for y in range(begin, 9):
-            if self.level[x][y].type == p.type:
-                count += 1
-            else:
-                break
-        
-        return count
-
     # Checar todas as combinações com essa peça
     def _check_combinations(self, p):
 
@@ -315,40 +285,51 @@ class Board(pygame.sprite.Sprite):
 
     # Destroi as peças do campo
     def _destroy_pieces(self, pieces):
-        # Enquanto tiver possibilidades, destruir!
-        while self._check_board(self.level):
+        
+        # Checa a combinação dessas duas peças
+        for p in pieces:
+            self._check_combinations(p)
+        
+        # Percorre todas as colunas
+        for y in range(9):
             
-            # Percorrer todas as peças
-            for i in range(9):
-                for j in range(9):
-                    
-                    # Peça escolhida
-                    p = self.level[i][j]
+            # Vai da posição mais baixa até ao topo
+            for x in reversed(range(9)):
 
-                    # Se passou do limite, não precisa conferir
-                    if i + 2 < 9:
-                        line = self.check_line(p)
+                # Se a posição for None, é necessário
+                # buscar as posições     
+                if self.level[x][y] is None:
                     
-                    # Se passou do limite, não precisa conferir
-                    if j + 2 < 9:
-                        column = self.check_column(p)
-                    
-                    # Verifica se rolou combinações
-                    if line > 3:
+                    find = False
+
+                    # Percorre até encontrar uma peça diferente
+                    # de None e diferente de Block
+                    for i in reversed(range(x)):
+
+                        p = self.level[i][y]
+                        if type(p) is not None and type(p) is not piece.Block:
+                            find = True
+                            
+                            p.x = x
+                            p.y = y
+                            
+
+                            break
+
                         pass
-                    pass
-                pass
-            pass
-        pass
 
     # Testa se o movimento é possivel
     def test_move(self, p1, p2):
 
+        # Troca as peças de posição
         self._move_pieces(p1,p2)
 
+        # Se surgiu movimentos válidos,
+        # destroi as peças em sequência
         if self._check_board(self.level):
             self._destroy_pieces([p1,p2])
+        
+        # Não surgiu movimentos válidos, retorna as
+        # peças ao local correto
         else:
             self._move_pieces(p1,p2)
-            p1.update_rect()
-            p2.update_rect()
