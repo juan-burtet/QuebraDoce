@@ -172,20 +172,157 @@ class Board(pygame.sprite.Sprite):
         self.level[p1.x][p1.y] = p1
         self.level[p2.x][p2.y] = p2
 
-    def _check_line(self, p):
+    # Checa todas as posições da peça atual até a mais pra direita,
+    # para encontrar combinações
+    def _check_line(self, p, move):
         
-
-    def _check_column(self, p):
-        pass
-
-    # Destroi todas as sequências de peças
-    def _destroy_pieces(self):
+        begin = p.x +1
+        y = p.y
+        count = 1
+        for x in range(begin, 9):
+            if self.level[x][y].type == p.type:
+                count +=1
+            else:
+                break
         
+        return count
+    
+    # Checa todas posições da peça atual até a mais pra baixo,
+    # para encontrar combinações
+    def _check_column(self, p, move):
+        
+        begin = p.y +1
+        x = p.x
+        count = 1
+        for y in range(begin, 9):
+            if self.level[x][y].type == p.type:
+                count += 1
+            else:
+                break
+        
+        return count
+
+    # Checar todas as combinações com essa peça
+    def _check_combinations(self, p):
+
+        # Checa a sequencia a esquerda da peça
+        x = p.x -1
+        left = 0
+        while x > 0:
+            
+            # Verifica se é o mesmo tipo, caso ocorra algum
+            # erro, é uma classe sem "tipo", então pula fora
+            try:
+                if self.level[x][p.y].type == p.type:
+                    left += 1
+                else:
+                    break
+            except:
+                break
+            
+            x -= 1
+        
+        # Checa a sequencia a direita da peça
+        x = p.x +1
+        right = 0
+        while x < 9:
+            
+            # Verifica se é o mesmo tipo, caso ocorra algum
+            # erro, é uma classe sem "tipo", então pula fora
+            try:
+                if self.level[x][p.y].type == p.type:
+                    right += 1
+                else:
+                    break
+            except:
+                break
+
+            x += 1
+        
+        # Checa a sequência a cima da peça
+        y = p.y -1
+        top = 0
+        while y > 0:
+            
+            try:
+                if self.level[p.x][y].type == p.type:
+                    top += 1
+                else:
+                    break
+            except:
+                break
+            
+            y -= 1
+        
+        # Checa a sequência a baixo da peça
+        y = p.y +1
+        bottom = 0
+        while y < 9:
+            
+            # Verifica se é o mesmo tipo, caso ocorra algum
+            # erro, é uma classe sem "tipo", então pula fora
+            try:
+                if self.level[p.x][y].type == p.type:
+                    bottom += 1
+                else:
+                    break
+            except:
+                break
+
+            y += 1
+        
+        # Pega o tamanho das sequências
+        row = left + right + 1 # linha
+        col = top + bottom + 1 # coluna
+
+        # Nova peça no local?
+        new_piece = None
+        if row >= 5 or col >= 5: # IGUAL A BOMBA!
+            new_piece = piece.Bomb(p.x, p.y)
+        elif row >= 3 and col >= 3: # IGUAL A WRAPPED
+            new_piece = piece.Wrapped(p.x, p.y, p.type)
+        elif row == 4 or col == 4: # IGUAL AO STRIPPED
+            new_piece = piece.Stripped(p.x, p.y, p.type)
+
+        # Indica se a peça foi deletada
+        delete = False
+
+        # Verifica a linha
+        if row >= 3:
+            delete = True
+            for i in range(p.x - left, p.x):
+                self.level[i][p.y] = None
+            for i in range(p.x +1, p.x + right):
+                self.level[i][p.y] = None
+        
+        # Verifica a Coluna
+        if col >= 3:
+            delete = True
+            for j in range(p.y - top, p.y):
+                self.level[p.x][j] = None
+            for j in range(p.y + 1, p.y + bottom):
+                self.level[p.x][j] = None
+        
+        # Se a peça foi deletada, exclui ela
+        if delete:
+
+            # Mas caso tenha uma nova peça gerada, coloca
+            # ela nesta posição
+            if new_piece is not None:
+                self.level[p.x][p.y] = new_piece
+            else:
+                self.level[p.x][p.y] = None
+
+    # Destroi as peças do campo
+    def _destroy_pieces(self, pieces):
         # Enquanto tiver possibilidades, destruir!
         while self._check_board(self.level):
-            p = None
+            
+            # Percorrer todas as peças
             for i in range(9):
                 for j in range(9):
+                    
+                    # Peça escolhida
                     p = self.level[i][j]
 
                     # Se passou do limite, não precisa conferir
@@ -195,6 +332,13 @@ class Board(pygame.sprite.Sprite):
                     # Se passou do limite, não precisa conferir
                     if j + 2 < 9:
                         column = self.check_column(p)
+                    
+                    # Verifica se rolou combinações
+                    if line > 3:
+                        pass
+                    pass
+                pass
+            pass
         pass
 
     # Testa se o movimento é possivel
@@ -203,7 +347,7 @@ class Board(pygame.sprite.Sprite):
         self._move_pieces(p1,p2)
 
         if self._check_board(self.level):
-            self._destroy_pieces()
+            self._destroy_pieces([p1,p2])
         else:
             self._move_pieces(p1,p2)
             p1.update_rect()

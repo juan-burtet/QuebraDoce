@@ -1,7 +1,2 @@
-class Oi:
-    pass
-
-oi =  Oi()
-
-x = oi.x
-print(x)
+for i in range(9, 8):
+    print(x)

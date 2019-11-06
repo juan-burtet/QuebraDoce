@@ -20,6 +20,7 @@ class Piece(pygame.sprite.Sprite):
         pygame.sprite.Sprite.__init__(self)
         self.x = x
         self.y = y
+        self.points = 0
 
     def set_value(self, value):
         self.value = value
@@ -73,6 +74,7 @@ class Objective(Piece):
             self.sprite, -1)
         
         self.update_rect()
+        self.points = 10000
 
 
 '''
@@ -117,6 +119,7 @@ class Protection(Simple):
         self.image = s
 
         self.update_rect()
+        self.points = 1000
 
 
     pass
@@ -127,9 +130,23 @@ a habilidade ...
 '''
 class Stripped(Simple):
 
-    def __init__(self):
-        Simple.__init__(self)
-        pass
+    # Conjunto de imagens 
+    # aux = path_image + "pieces/simple/"
+    sprites = [
+        "%s%d.png" % (path_image + "pieces/stripped/", i) \
+            for i in range(6)
+    ]
+
+    def __init__(self, x, y, t):
+        Simple.__init__(self, x, y, 1)
+        self.type = t
+
+        # Imagem e o rect da sprite
+        self.image, self.rect = load_image(
+            self.sprites[self.type], -1)
+
+        self.update_rect()
+        self.points = 3000
 
 '''
 Representa uma peça goma, que possui 
@@ -137,8 +154,23 @@ a habilidade ...
 '''
 class Wrapped(Simple):
 
-    def __init__(self):
-        Simple.__init__(self)
+    # Conjunto de imagens 
+    # aux = path_image + "pieces/simple/"
+    sprites = [
+        "%s%d.png" % (path_image + "pieces/wrapped/", i) \
+            for i in range(6)
+    ]
+
+    def __init__(self, x, y, t):
+        Simple.__init__(self, x, y, 1)
+        self.type = t
+
+        # Imagem e o rect da sprite
+        self.image, self.rect = load_image(
+            self.sprites[self.type], -1)
+
+        self.update_rect()
+        self.points = 1000
         pass
 
 '''
@@ -148,7 +180,16 @@ mesma cor do campo
 '''
 class Bomb(Simple):
 
-    def __init__(self):
-        Simple.__init__(self)
+    sprite = path_image + 'pieces/bomb/0.png'
+
+    def __init__(self, x, y):
+        Simple.__init__(self, x, y, 1)
+
+        # Imagem e o rect da sprite
+        self.image, self.rect = load_image(
+            self.sprite, -1)
+
+        self.update_rect()
+        self.points = 3000
         pass
 

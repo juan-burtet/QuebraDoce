@@ -251,7 +251,7 @@ class Game(pygame.sprite.Sprite):
             return None
         
         # Testa o movimento
-        self.board.test_move(self.pick, p)
+        self.board.test_move(p, self.pick)
 
         # Retorna nenhuma peça seleciona
         return None
