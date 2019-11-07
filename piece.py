@@ -102,6 +102,10 @@ class Simple(Objective):
 
         self.update_rect()
 
+'''
+Representa a peça mais simples do campo com uma 
+proteção azul que necessita ser quebrada
+'''
 class Protection(Simple):
 
     def __init__(self, x, y, n):
@@ -126,7 +130,8 @@ class Protection(Simple):
 
 '''
 Representa uma peça listrada, que possui
-a habilidade ...
+a habilidade de eliminar uma linha ou uma coluna inteira,
+dependendo do movimento da peça
 '''
 class Stripped(Simple):
 
@@ -150,7 +155,7 @@ class Stripped(Simple):
 
 '''
 Representa uma peça goma, que possui 
-a habilidade ...
+a habilidade de eliminar as 8 peças a volta dela.
 '''
 class Wrapped(Simple):
 
@@ -176,7 +181,7 @@ class Wrapped(Simple):
 '''
 Representa uma peça bomba, que possui
 a habilidade de eliminar todas as peças de 
-mesma cor do campo
+mesma cor do campo.
 '''
 class Bomb(Simple):
 
@@ -188,7 +193,7 @@ class Bomb(Simple):
         # Imagem e o rect da sprite
         self.image, self.rect = load_image(
             self.sprite, -1)
-
+        self.type = -1
         self.update_rect()
         self.points = 3000
         pass
