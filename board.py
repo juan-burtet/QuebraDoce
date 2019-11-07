@@ -11,13 +11,15 @@ class Board(pygame.sprite.Sprite):
     def __init__(self, file=None):
         pygame.sprite.Sprite.__init__(self)
         
+        # Iniciaca as informações com o arquivo
         if file is not None:
-            info, level = game_utils.load_level(file)
-            self._set_info(info=info)
-            self._create_level(level=level)
+            self.info, self.map = game_utils.load_level(file)
         else:
-            self._create_level()
-            self._get_info()
+            self.info, self.map = None, None
+
+        # Inicializa os mapas
+        self._create_level()
+        self._set_info()
 
     # Adiciona o modo de jogo
     def _set_mode(self):
@@ -43,7 +45,8 @@ class Board(pygame.sprite.Sprite):
             self.mode = 'MIX'
 
     # Adiciona as informações do mapa
-    def _set_info(self, info=None):
+    def _set_info(self):
+        info = self.info
         self.points = 0
 
         if info is not None:
@@ -115,8 +118,8 @@ class Board(pygame.sprite.Sprite):
         return False
 
     # Gera o mapa do jogo
-    def _create_level(self, level=None):
-
+    def _create_level(self, first=True):
+        level = self.map
         self.level = np.zeros((9, 9), dtype=object)
 
         # Se o nivel foi passado, inicializa
@@ -131,7 +134,10 @@ class Board(pygame.sprite.Sprite):
                         elif p == 1:
                             self.level[j][i] = piece.Simple(j,i,6)
                         elif p == 2:
-                            self.level[j][i] = piece.Protection(j,i,6)
+                            if first:
+                                self.level[j][i] = piece.Protection(j,i,6)
+                            else:
+                                self.level[j][i] = piece.Simple(j,i,6)
                         elif p == 3:
                             self.level[j][i] = piece.Objective(j,i)
                         
@@ -299,7 +305,6 @@ class Board(pygame.sprite.Sprite):
                 # Se a posição for None, é necessário
                 # buscar as posições     
                 if self.level[x][y] is None:
-                    
                     find = False
 
                     # Percorre até encontrar uma peça diferente
@@ -307,16 +312,123 @@ class Board(pygame.sprite.Sprite):
                     for i in reversed(range(x)):
 
                         p = self.level[i][y]
-                        if type(p) is not None and type(p) is not piece.Block:
+                        if (p is not None) and (type(p) is not piece.Block):
                             find = True
                             
+                            # Atualiza com a posição nova
+                            print(type(p))
                             p.x = x
                             p.y = y
+                            self.level[x][y] = p
+
+                            # Retira a peça da posição antiga
+                            self.level[i][y] = None
+
+                            # Se tiver combinações, destroi na localização
+                            # dessa peça
+                            if self._check_board(self.level):
+                                return self._destroy_pieces([p])
                             
+                            # Atualiza a posição dela no campo
+                            self.level[x][y].update_rect()
 
+                            # Já adicionou peça, pode sair do laço!
                             break
+                    
+                    # Se não encontrou nenhuma peça,
+                    # adiciona novas peças nas posições
+                    if not find:
+                        
+                        # Começa da peça até o topo
+                        for i in reversed(range(x+1)):
+                            
+                            # Adiciona a nova peça
+                            self.level[i][y] = piece.Simple(i,y,6)
 
-                        pass
+                            # Se gerou uma nova possibilidade, destruir!
+                            if self._check_board(self.level):
+                                return self._destroy_pieces(
+                                    [self.level[i][y]])
+                        
+                        # Já adicionou peças o suficiente,
+                        # pode pular pra próxima posição
+                        break
+        
+        print("ROBERTO!")
+
+        # O Tabuleiro está completo novamente, agora
+        # se não tiver movimentos possiveis, gera novamente
+        if not self._has_moves():
+            self._create_level(first=False)
+
+    # Usado para verificar se o tabuleiro possui movimentos possiveis
+    def _has_moves(self):
+
+        # Percorre todo o campo
+        for y in range(9):
+            for x in range(9):
+
+                # Pega o tipo da peça
+                p = self.level[x][y]
+                try:
+                    t = p.type
+                except:
+                    continue
+                
+                # Checa as sequências para verificar movimentos
+                if x + 3 < 9:
+                    
+                    # Percorre as 3 peças seguintes e
+                    # verifica se só existe um tipo diferente
+                    count = 0
+                    for index in range(1,4):
+                        p_aux = self.level[x+index][y]
+                        t_aux = None
+                        try:
+                            t_aux = p_aux.type
+                        except:
+                            break
+                        
+                        # Se os tipos forem diferentes, 
+                        # soma 1
+                        if t_aux != t:
+                            count += 1
+                        
+                        # Se encontrou mais que 1, pula
+                        if count > 1:
+                            break
+                    # Se passou por todo esse processo, tem movimentos
+                    else:
+                        return True
+                
+                # Checa as sequências para verificar movimentos
+                if y + 3 < 9:
+
+                    # Percorre as 3 peças seguintes e
+                    # verifica se só existe um tipo diferente
+                    count = 0
+                    for index in range(1,4):
+                        p_aux = self.level[x][y+index]
+                        t_aux = None
+                        try:
+                            t_aux = p_aux.type
+                        except:
+                            break
+                        
+                        # Se os tipos forem diferentes, 
+                        # soma 1
+                        if t_aux != t:
+                            count += 1
+                        
+                        # Se encontrou mais que 1, pula
+                        if count > 1:
+                            break
+                    # Se passou por todo esse processo, tem movimentos
+                    else:
+                        return True
+        
+        # Não possui movimentos
+        return False
 
     # Testa se o movimento é possivel
     def test_move(self, p1, p2):

@@ -161,7 +161,8 @@ class Game(pygame.sprite.Sprite):
     # Inicializa as informações necessárias pro Game_Screen
     def _set_game_screen(self):
         self.status = 'game'
-        self.board = board.Board("levels/example.csv")
+        #self.board = board.Board("levels/example.csv")
+        self.board = board.Board()
         self._get_objective_image()
         self.blocks = self.board.blocks
         self.objectives = self.board.canes
