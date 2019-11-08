@@ -28,13 +28,16 @@ class Piece(pygame.sprite.Sprite):
     def get_value(self):
         return self.value
 
+    # Retorna a posição da peça
     def get_pos(self):
         return (self.x, self.y)
     
     def get_piece(self):
         return (self.image, self.rect)
     
+    # Atualiza o rect da peça
     def update_rect(self):
+
         # Atualiza a posição da peça
         self.rect.topleft = self.topleft
         self.rect.left += self.x * (self.space + self.rect.width)
