@@ -52,9 +52,9 @@ class Board(pygame.sprite.Sprite):
     # Adiciona as informações do mapa
     def _set_info(self):
         info = self.info
-        self.points = 0
+        self.points = 4520
 
-        self.types = 3
+        self.types = 6
         if info is not None:
             self.moves = info[0]
             self.w_points = info[1]
