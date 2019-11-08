@@ -63,10 +63,3 @@ def load_level(file_csv):
         level.append([int(x) for x in line.split(',')])
     
     return info, level
-
-#load_level("levels/example.csv")
-
-        
-
-
-

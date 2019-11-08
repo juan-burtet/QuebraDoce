@@ -6,8 +6,13 @@ import copy
 import piece
 import game_utils
 
+'''
+Concentra o campo do jogo e trabalha com 
+toda a movimentação e objetivos.
+'''
 class Board(pygame.sprite.Sprite):
 
+    # Inicializador
     def __init__(self, file=None):
         pygame.sprite.Sprite.__init__(self)
         
@@ -469,3 +474,70 @@ class Board(pygame.sprite.Sprite):
         # peças ao local correto
         else:
             self._move_pieces(p1,p2)
+
+    # Método para todas as combinações especiais
+    def _special_comb(self, p1, p2):
+
+        # Caso os 2 tipos sejam iguais
+        if type(p1) is type(p2):
+
+            # Se for tipo Listrado:
+            if type(p1) is piece.Stripped:
+                # Elimina a linha e a coluna ao mesmo tempo
+                pass
+            
+            # Se for tipo Goma
+            elif type(p1) is piece.Wrapped:
+                # Elimina as 24 peças em volta
+                pass
+            
+            # Se for tipo Bomba
+            elif type(p1) is piece.Bomb:
+                # Destroi todas as peças do campo
+                pass
+        
+        # Os dois tipos são diferentes
+        else:
+
+            # Se a primeira peça for Listrada
+            if type(p1) is piece.Stripped:
+                
+                # Se a segunda peça for Goma
+                if type(p2) is piece.Wrapped:
+                    # Elimina 3 linhas e 3 colunas
+                    pass
+
+                # Se a segunda peça for Bomba
+                elif type(p2) is piece.Bomb:
+                    # Transforma todas as peças do mesmo tipo
+                    # em listradas e ativa elas
+                    pass
+            
+            # Se a primeira peça for Goma
+            elif type(p1) is piece.Wrapped:
+                
+                # Se a segunda peça for Listrada
+                if type(p2) is piece.Stripped:
+                    # Elimina 3 linhas e 3 colunas
+                    pass
+                
+                # Se a segunda peça for Bomba
+                elif type(p2) is piece.Bomb:
+                    # Transforma todas as peças do mesmo tipo
+                    # em gomas, e ativa elas
+                    pass
+            
+            # Se a primeira peça for Bomba
+            elif type(p1) is piece.Bomb:
+                
+                # Se a segunda peça for Listrada
+                if type(p2) is piece.Stripped:
+                    # Transforma todas as peças do mesmo tipo
+                    # em listradas e ativa elas
+                    pass
+                
+                # Se a segunda peça for Goma
+                elif type(p2) is piece.Wrapped:
+                    # Transforma todas as peças do mesmo tipo
+                    # em gomas, e ativa elas
+                    pass
