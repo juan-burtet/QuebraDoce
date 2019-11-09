@@ -75,10 +75,8 @@ class Objective(Piece):
         # Imagem e o rect da sprite
         self.image, self.rect = load_image(
             self.sprite, -1)
-        
         self.update_rect()
         self.points = 10000
-
 
 '''
 Representa a peça mais simples do campo, antes de 

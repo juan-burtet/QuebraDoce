@@ -6,6 +6,20 @@ import copy
 import piece
 import game_utils
 
+
+# Tipos especiais
+special = (
+    piece.Stripped,
+    piece.Wrapped,
+    piece.Bomb
+)
+
+# Tipos que não quebram
+extra = (
+    piece.Objective,
+    piece.Block
+)
+
 '''
 Concentra o campo do jogo e trabalha com 
 toda a movimentação e objetivos.
@@ -28,7 +42,7 @@ class Board(pygame.sprite.Sprite):
         self._create_level()
 
     # Define os labels das posições de peças especiai
-    def _create_labels(self):
+    def _create_labels(self, first=True):
         level = self.map
 
         # Inicializa os labels com 0
@@ -42,9 +56,16 @@ class Board(pygame.sprite.Sprite):
                         self.labels[j][i] = p
                     print(self.labels[j][i], "", end="")
                 print("")
-            pass
+        else:
+            for x in range(9):
+                for y in range(9):
+                    p = self.level[x][y]
+                    if p is not None:
+                        if type(p) is piece.Objective:
+                            self.labels[x][y] = 3
+                        elif type(p) is piece.Protection:
+                            self.labels[x][y] = 2
 
-    
     # Atualiza os objetivos
     def _update_objectives(self):
 
@@ -413,6 +434,8 @@ class Board(pygame.sprite.Sprite):
                         # pode pular pra próxima posição
                         break
 
+        self._create_labels(first=False)
+        
         # O Tabuleiro está completo novamente, agora
         # se não tiver movimentos possiveis, gera novamente
         if not self._has_moves():
@@ -517,14 +540,178 @@ class Board(pygame.sprite.Sprite):
             # peças ao local correto
             else:
                 self._move_pieces(p1,p2)
+        else:
+            self._destroy_single_piece([])
         
         self._update_objectives()
 
-    # Destroi as peças 
-    def _special_double_stripped(self, p1):
-        pass
+    # Elimina a linha e a coluna ao mesmo tempo [FEITO]
+    def _special_double_stripped(self, p):
+        
+        x = p.x
+        for y in range(9):
+            aux_p = self.level[x][y]
+            self._destroy_single_piece(aux_p)
+        
+        y = p.y
+        for x in range(9):
+            aux_p = self.level[x][y]
+            self._destroy_single_piece(aux_p)
 
-    # Método para todas as combinações especiais
+    # Elimina as 24 peças em volta [FEITO]
+    def _special_double_wrapped(self, p):
+        
+        # Faz igual a normal, mas com um tamanho maior
+        self._special_wrapped(self, p, size=2)
+
+    # Destroi todas as peças do campo [FEITO]
+    def _special_double_bomb(self):
+        
+        # Destroi todas as peças do campo
+        for x in range(9):
+            for y in range(9):
+                p = self.level[x][y]
+                self._destroy_single_piece(p)
+    
+    # Elimina 3 linhas e 3 colunas [FEITO]
+    def _special_stripped_wrapped(self, p):
+        
+        # Retorna os intervalos
+        x, y, end_x, end_y = self._get_wrapped_size(p, size)
+
+        # Percorre a diagonal, deletando linha e coluna
+        i = 0
+        while i < 3:
+            if end_x <= 8 and end_y <= 8:
+                aux_p = self.level[x+i][y+i]
+                self._special_double_stripped(aux_p)
+            else:
+                break
+
+    # Transforma todas as peças do mesmo tipo em listradas e ativa elas [FEITO]
+    def _special_stripped_bomb(self, p):
+
+        # Percorre todas as peças
+        for x in range(9):
+            for y in range(9):
+                aux_p = self.level[x][y]
+
+                # Se for do mesmo tipo, ativa elas como listradas
+                if aux_p is not None:
+                    if aux_p.type == p.type:
+                        self._special_stripped(aux_p)
+
+    # Transforma todas as peças do mesmo tipo em gomas, e ativa elas
+    def _special_wrapped_bomb(self, p):
+        
+        # Percorre todas as peças
+        for x in range(9):
+            for y in range(9):
+                aux_p = self.level[x][y]
+
+                # Se for do mesmo tipo, ativa elas como listradas
+                if aux_p is not None:
+                    if aux_p.type == p.type:
+                        self._special_wrapped(aux_p)
+
+    # elimina uma linha ou uma coluna inteira, aleatoriamente [FEITO]
+    def _special_stripped(self, p):
+
+        # Decide a opção do movimento
+        option = random.choice([True, False])
+
+        # Se for True, é Linha
+        if option:
+            y = p.y
+
+            # Percorre toda a linha
+            for x in range(9):
+                aux_p = self.level[x][y]
+                self._destroy_single_piece(aux_p)
+
+        # Se for False, é Coluna
+        else:
+            x = p.x
+
+            # Percorre toda a coluna
+            for y in range(9):
+                aux_p = self.level[x][y]
+                self._destroy_single_piece(aux_p)
+
+    # elimina as 8 peças a volta dela [FEITO]
+    def _special_wrapped(self, p, size=1):
+        
+        x, y, end_x, end_y = self._get_wrapped_size(p, size)
+        
+        # Percorre toda a área
+        for i in range(x, end_x):
+            for j in range(y, end_y):
+                aux_p = self.level[i][j]
+                self._destroy_single_piece(aux_p)
+    
+    # Retorna os intervalos do tipo goma [FEITO]
+    def _get_wrapped_size(self, p, size):
+        # Pega as posições anteriores 
+        x = p.x - size
+        y = p.y - size
+
+        # Se passou das margens
+        if x < 0:
+            x = 0
+        if y < 0:
+            y = 0
+        
+        # Pega as posições finais
+        end_x = p.x + size + 1
+        end_y = p.y + size + 1
+
+        # Se passou das margens
+        if end_x > 8:
+            end_x = 8
+        if end_y > 8:
+            end_y = 8
+        
+        return x, y, end_x, end_y
+
+    # elimina todas as peças de mesma cor do campo. [FEITO]
+    def _special_bomb(self, p):
+        
+        # Percorre todas as posições
+        for x in range(9):
+            for y in range(9):
+                aux_p = self.level[x][y]
+                
+                # Destroi a peça se for do mesmo tipo
+                if aux_p is not None:
+                    if aux_p.type == p.type:
+                        self._destroy_single_piece(aux_p)
+
+    # Destroi uma unica peça, referente ao seu tipo [FEITO]
+    def _destroy_single_piece(self, p):
+
+        # Se não tiver peça, pula pra próxima
+        if p is None:
+            return 
+
+        # Se for peça especial, ativa ela
+        if isinstance(p, special):
+            self._special_type(p)
+        
+        # Se não for Bloqueio ou objetivo, exclui
+        elif not isinstance(p, extra):
+            self.level[x][y] = None
+
+    # Decide qual o tipo da peça e ativa seu poder [FEITO]
+    def _special_type(self, p):
+        
+        if type(p) is piece.Stripped:
+            self._special_stripped(p)
+        elif type(p) is piece.Wrapped:
+            self._special_wrapped(p)
+        elif type(p) is piece.Bomb:
+            self._special_bomb(p)
+
+    # Método para todas as combinações especiais [FEITO]
     def _special_comb(self, p1, p2):
 
         # Caso os 2 tipos sejam iguais
@@ -533,19 +720,19 @@ class Board(pygame.sprite.Sprite):
             # Se for tipo Listrado:
             if type(p1) is piece.Stripped:
                 # Elimina a linha e a coluna ao mesmo tempo
-                
+                self._special_double_stripped(p1)
                 return True
             
             # Se for tipo Goma
             elif type(p1) is piece.Wrapped:
                 # Elimina as 24 peças em volta
-                
+                self._special_double_wrapped(p1)
                 return True
             
             # Se for tipo Bomba
             elif type(p1) is piece.Bomb:
                 # Destroi todas as peças do campo
-                
+                self._special_double_bomb()
                 return True
         
         # Os dois tipos são diferentes
@@ -557,14 +744,14 @@ class Board(pygame.sprite.Sprite):
                 # Se a segunda peça for Goma
                 if type(p2) is piece.Wrapped:
                     # Elimina 3 linhas e 3 colunas
-                    
+                    self._special_stripped_wrapped(p1)
                     return True
 
                 # Se a segunda peça for Bomba
                 elif type(p2) is piece.Bomb:
                     # Transforma todas as peças do mesmo tipo
                     # em listradas e ativa elas
-                    
+                    self._special_stripped_bomb(p1)
                     return True
             
             # Se a primeira peça for Goma
@@ -573,14 +760,14 @@ class Board(pygame.sprite.Sprite):
                 # Se a segunda peça for Listrada
                 if type(p2) is piece.Stripped:
                     # Elimina 3 linhas e 3 colunas
-                    
+                    self._special_stripped_wrapped(p1)
                     return True
                 
                 # Se a segunda peça for Bomba
                 elif type(p2) is piece.Bomb:
                     # Transforma todas as peças do mesmo tipo
                     # em gomas, e ativa elas
-                    
+                    self._special_wrapped_bomb(p1)
                     return True
             
             # Se a primeira peça for Bomba
@@ -590,20 +777,25 @@ class Board(pygame.sprite.Sprite):
                 if type(p2) is piece.Stripped:
                     # Transforma todas as peças do mesmo tipo
                     # em listradas e ativa elas
-                    
+                    self._special_stripped_bomb(p2)
                     return True
                 
                 # Se a segunda peça for Goma
                 elif type(p2) is piece.Wrapped:
                     # Transforma todas as peças do mesmo tipo
                     # em gomas, e ativa elas
-                    
+                    self._special_wrapped_bomb(p2)
                     return True
         
         # Se alguma das peças for Bomba neste momento, a outra é 
         # uma peça simples
         if (type(p1) is piece.Bomb) or (type(p2) is piece.Bomb):
-
+            
+            # Ativa o poder da Peça BOMBA na peça Simples
+            if type(p1) is piece.Simple:
+                self._special_bomb(p1)
+            else:
+                self._special_bomb(p2)
             return True
 
         # Não tem combinações de peças especiais
