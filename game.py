@@ -166,6 +166,14 @@ class Game(pygame.sprite.Sprite):
         self._get_objective_image()
         self.blocks = self.board.blocks
         self.objectives = self.board.canes
+        self.round_info = None
+        self.timer = 0 # Tempo das mensagens da rodada
+        self.end = False # Verifica se é o fim do jogo
+        self.win = False # Verifica se você ganhou o jogo
+
+    # Inicializa as informações necessárias pra Start_Screen
+    def _set_start_screen(self):
+        self.status = 'start'
 
     # Trabalha todas as operações da tela inicial
     def _start_screen(self):
@@ -252,7 +260,7 @@ class Game(pygame.sprite.Sprite):
             return None
         
         # Testa o movimento
-        self.board.test_move(p, self.pick)
+        self.round_info = self.board.test_move(p, self.pick)
 
         # Retorna nenhuma peça seleciona
         return None
@@ -662,36 +670,164 @@ class Game(pygame.sprite.Sprite):
         self._print_game_moves(background)
         self._print_game_objectives(background)
 
+    # Imprime as informações da Rodada
+    def _print_round_info(self, background):
+        points = self.round_info[0]
+        pieces = self.round_info[1]
+        self.end = self.round_info[2]
+        self.win = self.round_info[3]
+
+        # Pinta o fundo do campo
+        rect = pygame.draw.rect(
+            background,
+            MODE_COLORS[self.board.mode],
+            (230,
+            size[1]/2 - 50, 
+            550, 
+            80),
+        )
+
+        # Faz o campo de movimentos
+        pygame.draw.rect(
+            background,
+            WHITE,
+            (230 -5,
+            size[1]/2 - 55, 
+            550 +10, 
+            80 +10),
+            10
+        )
+
+        # Faz o campo de movimentos
+        pygame.draw.rect(
+            background,
+            BLACK,
+            (230,
+            size[1]/2 - 50, 
+            550, 
+            80),
+            10
+        )
+
+        # Imprime a String: "MOVES"
+        string = "%d POINTS EARNED" % points
+        texts, pos = self._add_nes_text(
+            string,
+            text_size=30,
+            centerx=rect.centerx+2,
+            top=rect.top,
+        )
+        for t, p in zip(texts,pos):
+            background.blit(t,p)
+        
+        # Imprime a String: "MOVES"
+        string = "%d PIECES DESTROYED" % pieces
+        texts, pos = self._add_nes_text(
+            string,
+            text_size=30,
+            centerx=rect.centerx+2,
+            bottom=rect.bottom -5,
+        )
+        for t, p in zip(texts,pos):
+            background.blit(t,p)
+
+    # Imprime o fim da partida
+    def _print_end_game(self, background):
+        
+        string, color = None, None
+        # Se ganhou
+        if self.win:
+            string = "YOU WIN"
+            color = GREEN
+        # Se perdeu
+        else:
+            string = "YOU LOSE"
+            color = RED
+
+        left = 145
+        top = size[1]/2 - 45
+        width = 500
+        height = 100
+
+        # Faz o campo de movimentos
+        pygame.draw.rect(
+            background,
+            BLACK,
+            (left -5,
+            top -5, 
+            width +10, 
+            height +10),
+            15
+        )
+
+        # Pinta o fundo do campo
+        rect = pygame.draw.rect(
+            background,
+            color,
+            (left,
+            top, 
+            width, 
+            height),
+        )
+
+        # Faz o campo de movimentos
+        rect = pygame.draw.rect(
+            background,
+            WHITE,
+            (left,
+            top, 
+            width, 
+            height),
+            10
+        )
+
+        # Imprime a String de fim de partida
+        texts, pos = self._add_nes_text(
+            string,
+            reverse=False,
+            text_size=80,
+        )
+        for t, p in zip(texts,pos):
+            background.blit(t,p)
+
     # Trabalha todas as operação da tela do jogo    
     def _game_screen(self):
-
+        
         # Eventos possiveis da tela do jogo
         for event in self.events:
             
             # Apertou com o mouse (botão esquerdo)
             if event.type == MOUSEBUTTONDOWN and event.button == 1:
                 
-                # Posição do mouse
-                pos = pygame.mouse.get_pos()
 
-                # Percorre por todas as peças no campo
-                find = False
-                for pieces in self.board.level:
-                    for p in pieces:
+                # Só aceita movimentos se não tiver mensagem na tela
+                if self.round_info is None and not self.end:
+
+                    # Posição do mouse
+                    pos = pygame.mouse.get_pos()
+
+                    # Percorre por todas as peças no campo
+                    find = False
+                    for pieces in self.board.level:
+                        for p in pieces:
+                            
+                            # Verifica se houve colisão
+                            if p.rect.collidepoint(pos):
+                                self.pick = self._check_picked_piece(p) 
+                                find = True
+                                break
                         
-                        # Verifica se houve colisão
-                        if p.rect.collidepoint(pos):
-                            self.pick = self._check_picked_piece(p) 
-                            find = True
+                        # Se encontrou, sai do loop
+                        if find:
                             break
                     
-                    # Se encontrou, sai do loop
-                    if find:
-                        break
+                    # Se não encontrou, tira a peça
+                    if not find:
+                        self.pick = None
                 
-                # Se não encontrou, tira a peça
-                if not find:
-                    self.pick = None
+                # Se acabou a fase
+                elif self.end:
+                    self._set_start_screen()
 
         # Cria o background da fase
         background = pygame.Surface(self.screen.get_size())
@@ -736,6 +872,20 @@ class Game(pygame.sprite.Sprite):
                 self.pick,
                 color=RED,
                 width=5)
+
+        # Imprime na Tela as informações
+        if self.round_info is not None:
+
+            self.timer += 1
+            if self.timer < 90:
+                self._print_round_info(background)
+            else:
+                self.timer = 0
+                self.round_info = None
+        
+        # Verifica se é o fim do jogo
+        elif self.end:
+            self._print_end_game(background)
 
         # Retorna a tela a ser imprimida
         return background

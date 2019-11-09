@@ -101,6 +101,7 @@ class Simple(Objective):
         self.image, self.rect = load_image(
             self.sprites[self.type], -1)
 
+        self.points = 0
         self.update_rect()
 
 '''
@@ -176,7 +177,7 @@ class Wrapped(Simple):
             self.sprites[self.type], -1)
 
         self.update_rect()
-        self.points = 1000
+        self.points = 6000
         pass
 
 '''
@@ -196,6 +197,6 @@ class Bomb(Simple):
             self.sprite, -1)
         self.type = -1
         self.update_rect()
-        self.points = 3000
+        self.points = 10000
         pass
 
