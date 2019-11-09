@@ -47,15 +47,16 @@ class Board(pygame.sprite.Sprite):
 
         # Inicializa os labels com 0
         self.labels = np.zeros((9,9), dtype=int)
-        if level is not None:
-            for i, row in enumerate(level):
-                for j, p in enumerate(row):
-                    
-                    # Se tiver um objetivo ou proteção
-                    if p == 2 or p == 3:
-                        self.labels[j][i] = p
-                    print(self.labels[j][i], "", end="")
-                print("")
+        if first:
+            if level is not None:
+                for i, row in enumerate(level):
+                    for j, p in enumerate(row):
+                        
+                        # Se tiver um objetivo ou proteção
+                        if p == 2 or p == 3:
+                            self.labels[j][i] = p
+                        print(self.labels[j][i], "", end="")
+                    print("")
         else:
             for x in range(9):
                 for y in range(9):
@@ -121,6 +122,16 @@ class Board(pygame.sprite.Sprite):
 
         # Atualiza o modo do jogo
         self._set_mode()
+
+    # Usado para checar se o objetivo já foi completado
+    def _check_objective(self):
+        y = 8
+        for x in range(9):
+            p = self.level[x][y]
+            if type(p) is piece.Objective:
+                self.level[x][y] = None
+        
+        self._destroy_pieces([])
 
     # Checa se o mapa não possui sequencias de 3 ou mais
     def _check_board(self, level):
@@ -380,6 +391,10 @@ class Board(pygame.sprite.Sprite):
             # Vai da posição mais baixa até ao topo
             for y in reversed(range(9)):
 
+                # Se for a ultima linha e tiver um objetivo, exclui ele do campo!
+                if y == 8 and type(self.level[x][y]) is piece.Objective:
+                    self.level[x][y] = None
+
                 # Se a posição for None, é necessário
                 # buscar as posições     
                 if self.level[x][y] is None:
@@ -434,6 +449,7 @@ class Board(pygame.sprite.Sprite):
                         # pode pular pra próxima posição
                         break
 
+        #self._check_objective()
         self._create_labels(first=False)
         
         # O Tabuleiro está completo novamente, agora
@@ -541,7 +557,7 @@ class Board(pygame.sprite.Sprite):
             else:
                 self._move_pieces(p1,p2)
         else:
-            self._destroy_single_piece([])
+            self._destroy_pieces([])
         
         self._update_objectives()
 
@@ -682,7 +698,7 @@ class Board(pygame.sprite.Sprite):
                 aux_p = self.level[x][y]
                 
                 # Destroi a peça se for do mesmo tipo
-                if aux_p is not None:
+                if aux_p is not None and not isinstance(aux_p, extra):
                     if aux_p.type == p.type:
                         self._destroy_single_piece(aux_p)
 
@@ -699,7 +715,7 @@ class Board(pygame.sprite.Sprite):
         
         # Se não for Bloqueio ou objetivo, exclui
         elif not isinstance(p, extra):
-            self.level[x][y] = None
+            self.level[p.x][p.y] = None
 
     # Decide qual o tipo da peça e ativa seu poder [FEITO]
     def _special_type(self, p):
