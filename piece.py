@@ -11,16 +11,15 @@ BLUE   = (146, 179, 255)
 Representa uma simples Peça no Tabuleiro,
 serve como uma classe abstrata
 '''
-class Piece(pygame.sprite.Sprite):
+class Piece():
 
     topleft = (225, 25)
     space = 2
 
-    def __init__(self, x,y):
-        pygame.sprite.Sprite.__init__(self)
+    def __init__(self, x, y):
         self.x = x
         self.y = y
-        self.points = 0
+        self.points = 20
 
     def set_value(self, value):
         self.value = value
@@ -33,15 +32,23 @@ class Piece(pygame.sprite.Sprite):
         return (self.x, self.y)
     
     def get_piece(self):
-        return (self.image, self.rect)
+
+        # Pygame precisa estar inicializado
+        if pygame.get_init():
+            return (self.image, self.rect)
+        else:
+            return (None, None)
     
     # Atualiza o rect da peça
     def update_rect(self):
 
-        # Atualiza a posição da peça
-        self.rect.topleft = self.topleft
-        self.rect.left += self.x * (self.space + self.rect.width)
-        self.rect.top  += self.y * (self.space + self.rect.height)
+        # Pygamegame precisa estar inicializado
+        if pygame.get_init():
+
+            # Atualiza a posição da peça
+            self.rect.topleft = self.topleft
+            self.rect.left += self.x * (self.space + self.rect.width)
+            self.rect.top  += self.y * (self.space + self.rect.height)
 
 '''
 Representa uma área onde não pode possuir peças
@@ -54,8 +61,10 @@ class Block(Piece):
     def __init__(self, x,y):
         Piece.__init__(self, x,y)
 
-        self.image, self.rect = load_image(
-            self.sprite, -1)
+        # Pygamegame precisa estar inicializado
+        if pygame.get_init():
+            self.image, self.rect = load_image(
+                self.sprite, -1)
         
         self.update_rect()
 
@@ -72,9 +81,13 @@ class Objective(Piece):
     def __init__(self, x,y):
         Piece.__init__(self, x, y)
         
-        # Imagem e o rect da sprite
-        self.image, self.rect = load_image(
-            self.sprite, -1)
+        # Pygamegame precisa estar inicializado
+        if pygame.get_init():
+
+            # Imagem e o rect da sprite
+            self.image, self.rect = load_image(
+                self.sprite, -1)
+        
         self.update_rect()
         self.points = 10000
 
@@ -97,9 +110,12 @@ class Simple(Objective):
         Objective.__init__(self, x, y)
         self.type = random.randint(0,n-1)
 
-        # Imagem e o rect da sprite
-        self.image, self.rect = load_image(
-            self.sprites[self.type], -1)
+        # Pygamegame precisa estar inicializado
+        if pygame.get_init():
+
+            # Imagem e o rect da sprite
+            self.image, self.rect = load_image(
+                self.sprites[self.type], -1)
 
         self.points = 0
         self.update_rect()
@@ -113,16 +129,19 @@ class Protection(Simple):
     def __init__(self, x, y, n):
 
         Simple.__init__(self, x, y, n)
+
+        # Pygamegame precisa estar inicializado
+        if pygame.get_init():
         
-        # Imagem e o rect da sprite
-        self.image, self.rect = load_image(
-            self.sprites[self.type], -1)
-        
-        # Desenha o quadrado transparente
-        s = pygame.Surface(self.rect.size)
-        s.fill(BLUE)
-        s.blit(self.image, (self.rect.left, self.rect.top))
-        self.image = s
+            # Imagem e o rect da sprite
+            self.image, self.rect = load_image(
+                self.sprites[self.type], -1)
+            
+            # Desenha o quadrado transparente
+            s = pygame.Surface(self.rect.size)
+            s.fill(BLUE)
+            s.blit(self.image, (self.rect.left, self.rect.top))
+            self.image = s
 
         self.update_rect()
         self.points = 1000
@@ -148,9 +167,12 @@ class Stripped(Simple):
         Simple.__init__(self, x, y, 1)
         self.type = t
 
-        # Imagem e o rect da sprite
-        self.image, self.rect = load_image(
-            self.sprites[self.type], -1)
+        # Pygamegame precisa estar inicializado
+        if pygame.get_init():
+
+            # Imagem e o rect da sprite
+            self.image, self.rect = load_image(
+                self.sprites[self.type], -1)
 
         self.update_rect()
         self.points = 3000
@@ -172,9 +194,12 @@ class Wrapped(Simple):
         Simple.__init__(self, x, y, 1)
         self.type = t
 
-        # Imagem e o rect da sprite
-        self.image, self.rect = load_image(
-            self.sprites[self.type], -1)
+        # Pygamegame precisa estar inicializado
+        if pygame.get_init():
+
+            # Imagem e o rect da sprite
+            self.image, self.rect = load_image(
+                self.sprites[self.type], -1)
 
         self.update_rect()
         self.points = 6000
@@ -192,9 +217,14 @@ class Bomb(Simple):
     def __init__(self, x, y):
         Simple.__init__(self, x, y, 1)
 
-        # Imagem e o rect da sprite
-        self.image, self.rect = load_image(
-            self.sprite, -1)
+        # Pygamegame precisa estar inicializado
+        if pygame.get_init():
+
+            # Imagem e o rect da sprite
+            self.image, self.rect = load_image(
+                self.sprite, -1)
+
+        
         self.type = -1
         self.update_rect()
         self.points = 10000

@@ -1,6 +1,8 @@
 import sys, pygame, time, random
 import numpy as np
 from pygame.locals import *
+from os import listdir
+from os.path import isfile, join
 
 # Arquivos próprios
 import piece
@@ -158,11 +160,18 @@ class Game(pygame.sprite.Sprite):
                 size=(35,35)
             )
 
+    # Pega um nível aleatório da pasta levels
+    def _pick_a_level(self):
+        mypath = "levels/"
+        onlyfiles = [join(mypath, f) for f in listdir(mypath) if isfile(join(mypath, f))]
+        onlyfiles.append(None)
+
+        return random.choice(onlyfiles)
+
     # Inicializa as informações necessárias pro Game_Screen
     def _set_game_screen(self):
         self.status = 'game'
-        self.board = board.Board("levels/example.csv")
-        #self.board = board.Board()
+        self.board = board.Board(file=self._pick_a_level())
         self._get_objective_image()
         self.blocks = self.board.blocks
         self.objectives = self.board.canes

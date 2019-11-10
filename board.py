@@ -270,7 +270,7 @@ class Board(pygame.sprite.Sprite):
         p2.update_rect()
 
     # Checar todas as combinações com essa peça
-    def _check_combinations(self, p):
+    def _check_combinations(self, p, factor):
 
         # Checa a sequencia a esquerda da peça
         x = p.x -1
@@ -382,14 +382,17 @@ class Board(pygame.sprite.Sprite):
             # Total de peças
             total = row + col - 1
             total -= 2
-            self.points += total * 60
+            self.points += (total * 60) * factor
 
     # Destroi as peças do campo
-    def _destroy_pieces(self, pieces):
+    def _destroy_pieces(self, pieces, factor=0):
         
+        # Aumenta o fator pra aumentar nas cascatas
+        factor += 1
+
         # Checa a combinação dessas duas peças
         for p in pieces:
-            self._check_combinations(p)
+            self._check_combinations(p, factor)
 
         # Percorre todas as colunas
         for x in range(9):
@@ -399,7 +402,6 @@ class Board(pygame.sprite.Sprite):
 
                 # Se for a ultima linha e tiver um objetivo, exclui ele do campo!
                 if y == 8 and type(self.level[x][y]) is piece.Objective:
-                    #self.level[x][y] = None
                     self._eliminate_piece(self.level[x][y])
 
                 # Se a posição for None, é necessário
@@ -426,7 +428,7 @@ class Board(pygame.sprite.Sprite):
                             # Se tiver combinações, destroi na localização
                             # dessa peça
                             if self._check_board(self.level):
-                                return self._destroy_pieces([p])
+                                return self._destroy_pieces([p], factor=factor)
                             
                             # Atualiza a posição dela no campo
                             self.level[x][y].update_rect()
@@ -450,7 +452,7 @@ class Board(pygame.sprite.Sprite):
                                 # Se gerou uma nova possibilidade, destruir!
                                 if self._check_board(self.level):
                                     return self._destroy_pieces(
-                                        [self.level[x][i]])
+                                        [self.level[x][i]], factor=factor)
                         
                         # Já adicionou peças o suficiente,
                         # pode pular pra próxima posição
@@ -580,6 +582,8 @@ class Board(pygame.sprite.Sprite):
             # Se surgiu movimentos válidos,
             # destroi as peças em sequência
             if self._check_board(self.level):
+
+                print("Jogada sem combinações Especiais!\n")
                 self._destroy_pieces([p1,p2])
                 self.moves -= 1
                 return self._finish_move()
@@ -591,6 +595,7 @@ class Board(pygame.sprite.Sprite):
         
         # Teve combinações especiais!
         else:
+            print("Jogada teve combinações Especiais!\n")
             self._destroy_pieces([])
             self.moves -= 1
             return self._finish_move()
@@ -602,6 +607,13 @@ class Board(pygame.sprite.Sprite):
     def _eliminate_piece(self, p):
         self.points += p.points
         self.level[p.x][p.y] = None
+
+        # print("ELIMINAÇÃO!")
+        # print("-----------")
+        # print("Peça de tipo:", type(p) )
+        # print("Posição: (%d,%d)" % (p.x, p.y))
+        # print("Tipo:", p.type)
+        # print("----------")
 
     # Elimina a linha e a coluna ao mesmo tempo [FEITO]
     def _special_double_stripped(self, p):
@@ -639,7 +651,7 @@ class Board(pygame.sprite.Sprite):
         print("Especial: Listrada + Goma")
 
         # Retorna os intervalos
-        x, y, end_x, end_y = self._get_wrapped_size(p, size)
+        x, y, end_x, end_y = self._get_wrapped_size(p)
 
         # Percorre a diagonal, deletando linha e coluna
         i = 0
@@ -960,7 +972,7 @@ class Board(pygame.sprite.Sprite):
             self._eliminate_piece(p2)
 
             # Ativa o poder da Peça BOMBA na peça Simples
-            if type(p1) is piece.Simple:
+            if p1.type != -1:
                 self._special_bomb(p1)
             else:
                 self._special_bomb(p2)

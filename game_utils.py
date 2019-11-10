@@ -48,7 +48,7 @@ def load_level(file_csv):
     if os.path.exists(file_csv):
         file = open(file_csv, "r")
     else:
-        print("File don't Exist!")
+        print("File '%s' don't Exist!" % file_csv)
         exit()
     
     # Inicia a leitura de linhas
