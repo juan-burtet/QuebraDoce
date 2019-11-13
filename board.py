@@ -31,6 +31,9 @@ class Board(pygame.sprite.Sprite):
     def __init__(self, file=None):
         pygame.sprite.Sprite.__init__(self)
         
+        # Estado do Random
+        self.state = None
+
         # Iniciaca as informações com o arquivo
         if file is not None:
             self.info, self.map = game_utils.load_level(file)
@@ -47,6 +50,21 @@ class Board(pygame.sprite.Sprite):
         self._create_labels()
         self._set_info()
         self._create_level()
+
+    # Retorna o estado do random
+    def get_random_state(self):
+        if self.state is None:
+            self.state = random.getstate()
+        return self.state
+    
+    # Seta o estado do random
+    def set_random_state(self, state):
+        self.state = state
+
+    # Atualiza o estado do random
+    def update_random_state(self):
+        if state is not None:
+            random.setstate(self.state)
 
     # Verifica se o jogo foi finalizado
     def is_finished(self):
@@ -565,7 +583,11 @@ class Board(pygame.sprite.Sprite):
         )  
 
     # Testa se o movimento é possivel
-    def test_move(self, p1, p2):
+    def test_move(self, p1, p2, mcts=False):
+
+        # Se o MCTS for verdadeiro, inicializa o state do random
+        if mcts:
+            self.update_random_state()
 
         # Se o jogo terminou, não pode jogar!
         if self.is_finished():
@@ -583,9 +605,10 @@ class Board(pygame.sprite.Sprite):
             # destroi as peças em sequência
             if self._check_board(self.level):
 
-                print("Jogada sem combinações Especiais!\n")
+                # print("Jogada sem combinações Especiais!\n")
                 self._destroy_pieces([p1,p2])
                 self.moves -= 1
+                #self._print_possible_moves(self.possible_moves())
                 return self._finish_move()
             
             # Não surgiu movimentos válidos, retorna as
@@ -595,9 +618,10 @@ class Board(pygame.sprite.Sprite):
         
         # Teve combinações especiais!
         else:
-            print("Jogada teve combinações Especiais!\n")
+            # print("Jogada teve combinações Especiais!\n")
             self._destroy_pieces([])
             self.moves -= 1
+            #self._print_possible_moves(self.possible_moves())
             return self._finish_move()
 
         # Retorna Nada
@@ -617,7 +641,10 @@ class Board(pygame.sprite.Sprite):
 
     # Elimina a linha e a coluna ao mesmo tempo [FEITO]
     def _special_double_stripped(self, p):
-        print("Especial: Listrada dupla!")
+        # print("Especial: Listrada dupla!")
+
+        if p is None:
+            return
 
         x = p.x
         for y in range(9):
@@ -631,14 +658,17 @@ class Board(pygame.sprite.Sprite):
 
     # Elimina as 24 peças em volta [FEITO]
     def _special_double_wrapped(self, p):
-        print("Especial: Goma Dupla!")
+        # print("Especial: Goma Dupla!")
+
+        if p is None:
+            return
 
         # Faz igual a normal, mas com um tamanho maior
-        self._special_wrapped(self, p, size=2)
+        self._special_wrapped(p, size=2)
 
     # Destroi todas as peças do campo [FEITO]
     def _special_double_bomb(self):
-        print("Especial: Bomba Dupla!")
+        # print("Especial: Bomba Dupla!")
 
         # Destroi todas as peças do campo
         for x in range(9):
@@ -647,11 +677,14 @@ class Board(pygame.sprite.Sprite):
                 self._destroy_single_piece(p)
 
     # Elimina 3 linhas e 3 colunas [FEITO]
-    def _special_stripped_wrapped(self, p):
-        print("Especial: Listrada + Goma")
+    def _special_stripped_wrapped(self, p, size=2):
+        # print("Especial: Listrada + Goma")
+        
+        if p is None:
+            return
 
         # Retorna os intervalos
-        x, y, end_x, end_y = self._get_wrapped_size(p)
+        x, y, end_x, end_y = self._get_wrapped_size(p, size)
 
         # Percorre a diagonal, deletando linha e coluna
         i = 0
@@ -661,10 +694,14 @@ class Board(pygame.sprite.Sprite):
                 self._special_double_stripped(aux_p)
             else:
                 break
+            i += 1
 
     # Transforma todas as peças do mesmo tipo em listradas e ativa elas [FEITO]
     def _special_stripped_bomb(self, p):
-        print("Especial: Listrada + Bomba")
+        # print("Especial: Listrada + Bomba")
+
+        if p is None:
+            return
 
         # Percorre todas as peças
         for x in range(9):
@@ -677,7 +714,10 @@ class Board(pygame.sprite.Sprite):
 
     # Transforma todas as peças do mesmo tipo em gomas, e ativa elas [FEITO]
     def _special_wrapped_bomb(self, p):
-        print("Especial: Goma + Bomba")
+        # print("Especial: Goma + Bomba")
+
+        if p is None:
+            return
 
         # Percorre todas as peças
         for x in range(9):
@@ -690,7 +730,10 @@ class Board(pygame.sprite.Sprite):
 
     # elimina uma linha ou uma coluna inteira, aleatoriamente [FEITO]
     def _special_stripped(self, p):
-        print("Especial: Listrada!")
+        # print("Especial: Listrada!")
+
+        if p is None:
+            return
 
         # Decide a opção do movimento
         option = random.choice([True, False])
@@ -715,11 +758,13 @@ class Board(pygame.sprite.Sprite):
 
     # elimina as 8 peças a volta dela [FEITO]
     def _special_wrapped(self, p, size=1):
-        print("Especial: Goma!")
+        # print("Especial: Goma!")
+
+        if p is None:
+            return
 
         x, y, end_x, end_y = self._get_wrapped_size(p, size)
         
-
         # Percorre toda a área
         for i in range(x, end_x):
             for j in range(y, end_y):
@@ -760,7 +805,7 @@ class Board(pygame.sprite.Sprite):
         else:
             t = p.type
 
-        print("Especial: Bomba com o tipo", t)
+        # print("Especial: Bomba com o tipo", t)
 
         # Percorre todas as posições
         for x in range(9):
@@ -795,7 +840,9 @@ class Board(pygame.sprite.Sprite):
     # Decide qual o tipo da peça e ativa seu poder [FEITO]
     def _special_type(self, p):
         
-        if type(p) is piece.Stripped:
+        if type(p) is None:
+            return
+        elif type(p) is piece.Stripped:
             self._special_stripped(p)
         elif type(p) is piece.Wrapped:
             self._special_wrapped(p)
@@ -844,9 +891,13 @@ class Board(pygame.sprite.Sprite):
 
     # Método para todas as combinações especiais [FEITO]
     def _special_comb(self, p1, p2):
+        
+        # Caso um dos dois seja None
+        if p1 is None or p2 is None:
+            return False
 
         # Caso os 2 tipos sejam iguais
-        if type(p1) is type(p2):
+        elif type(p1) is type(p2):
 
             # Se for tipo Listrado:
             if type(p1) is piece.Stripped:
@@ -981,3 +1032,69 @@ class Board(pygame.sprite.Sprite):
 
         # Não tem combinações de peças especiais
         return False
+    
+    # Método para todas as combinações 
+    def _check_move(self, p1, p2, moves):
+        
+        # Se algum dos dois for none
+        if p1 is None or p2 is None:
+            return
+
+        # Se as duas peças forem especiais, a jogada é válida
+        if self._is_special(p1) and self._is_special(p2):
+            moves.append((p1,p2))
+            return
+        
+        # Se uma das peças for bomba, a jogada é válida
+        if type(p1) is piece.Bomb or type(p2) is piece.Bomb:
+            moves.append((p1,p2))
+            return
+        
+        # Troca as peças de posição
+        self._move_pieces(p1, p2)
+        
+        # Se gerou movimentos, a jogada é válida
+        if self._check_board(self.level):
+            moves.append((p1,p2))
+        
+        # Retorna as peças pra posição originais
+        self._move_pieces(p1, p2)
+
+    # Imprime os movimentos possiveis
+    def _print_possible_moves(self, moves):
+        print("[")
+        for move in moves:
+            print("(%d,%d) -> " % (move[0].x, move[0].y), end="")
+            print("(%d,%d)" % (move[1].x, move[1].y))
+        print("]")
+
+    # Retorna uma lista de tuplas com todos os movimentos possiveis
+    def possible_moves(self):
+
+        # Se o jogo já está em estado terminal, retorna None
+        if self.is_finished():
+            return None
+
+        moves = []
+        # Percorre todas as possibilidades
+        for x in range(9):
+            for y in range(9):
+                p1 = self.level[x][y]
+
+                # Se essa peça não pode ser destruida, pula pra próxima
+                if not self._can_destroy(p1):
+                    continue
+                
+                # Combinação Horizontal
+                if x + 1 < 9:
+                    p2 = self.level[x+1][y]
+                    if self._can_destroy(p2):
+                        self._check_move(p1, p2, moves)
+
+                # Combinação Vertical
+                if y + 1 < 9:
+                    p2 = self.level[x][y+1]
+                    if self._can_destroy(p2):
+                        self._check_move(p1, p2, moves)
+
+        return moves
