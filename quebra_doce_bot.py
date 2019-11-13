@@ -21,7 +21,8 @@ class QuebraDoceAI:
         self.min = 99999999
         self.media = 0
     
-    def do_playouts(self, n=1000):
+    def do_playouts(self, n=10000):
+        board = None
 
         begin = time.time()
         for i in range(n):
@@ -29,7 +30,7 @@ class QuebraDoceAI:
             i += 1
             print("Bot play #%d" % i)
 
-            board = copy.deepcopy(self.board)
+            board = get_board()
             while True:
                 if board.moves == 0 or board.is_finished():
                     break
@@ -115,6 +116,8 @@ class Node(ABC):
         "Nodes must be comparable"
         return True
 
-board = board.Board(file="levels/level13.csv")
-bot = QuebraDoceAI(board)
+def get_board():
+    return board.Board(file="levels/level13.csv")
+
+bot = QuebraDoceAI(None)
 bot.do_playouts()
