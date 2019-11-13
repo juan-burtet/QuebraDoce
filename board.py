@@ -152,7 +152,7 @@ class Board(pygame.sprite.Sprite):
             self.w_points = info[1]
             self.types = info[2]
         else:
-            self.w_points = 500000
+            self.w_points = 50000
             self.blocks = 0
             self.canes = 0
             self.moves = 30

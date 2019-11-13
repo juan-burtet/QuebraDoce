@@ -20,11 +20,53 @@ class QuebraDoceAI:
         self.max = -1
         self.min = 99999999
         self.media = 0
+        self.rewards = 0
     
-    def do_playouts(self, n=10000):
-        board = None
+    def get_reward(self, board):
+        count = 0
+        total = 0
+        if self.blocks > 0:
+            if self.blocks != board.blocks:
+                blocks = 1/(self.blocks/(self.blocks - board.blocks))
+            else:
+                blocks = 0
+            total += blocks
+            count += 1
+        
+        if self.canes > 0:
+            if self.canes != board.canes:
+                canes = 1/(self.canes/(self.canes - board.canes))
+            else:
+                canes = 0
+            
+            total += canes
+            count += 1
+
+        if self.w_points > 0:
+            points = 0
+            if board.points >= self.w_points:
+                points = 1
+            else:
+                points = board.points/self.w_points
+            
+            total += points
+            count += 1
+        
+        if count > 0:
+            return total/count
+        else:
+            return 1.0
+
+
+
+    def do_playouts(self, n=100):
+        board = get_board()
+        self.w_points = board.w_points
+        self.blocks = board.blocks
+        self.canes = board.canes
 
         begin = time.time()
+        self.rewards = 0
         for i in range(n):
             match = time.time()
             i += 1
@@ -50,14 +92,18 @@ class QuebraDoceAI:
             print("Blocks:", board.blocks)
             print("Canes:", board.canes)
             print("Tempo:", time.time() - match)
+            print("Reward:", self.get_reward(board))
             print("")
 
             if board.is_finished():
                 self.wins += 1
+            
+            self.rewards += self.get_reward(board)
             self.plays += 1
         
         print("Total Plays:", self.plays)
         print("Total Wins:", self.wins)
+        print("Total reward:", self.rewards)
         print("Win/Ratio:", float(self.wins/self.plays))
         print("Max points:", self.max)
         print("Min points:", self.min)
@@ -84,12 +130,15 @@ class Node(ABC):
     """
 
     def __init__(self, board):
-        self.board = board
+        self.board = copy.deepcopy(board)
 
-    @abstractmethod
     def find_children(self):
-        "All possible successors of this board state"
-        return set()
+        return self.board.possible_moves()
+
+    # @abstractmethod
+    # def find_children(self):
+    #     "All possible successors of this board state"
+    #     return set()
 
     @abstractmethod
     def find_random_child(self):
@@ -116,8 +165,9 @@ class Node(ABC):
         "Nodes must be comparable"
         return True
 
+
 def get_board():
-    return board.Board(file="levels/level13.csv")
+    return board.Board(file=None)
 
 bot = QuebraDoceAI(None)
 bot.do_playouts()
