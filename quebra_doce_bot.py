@@ -69,7 +69,7 @@ class QuebraDoceAI:
         while i < n:
         #for _ in range(n):
             aux = copy.deepcopy(board)
-            aux.copy_level(board.level)
+            #aux.copy_level(board.level)
             move = random.choice(moves)
             try:
                 aux.test_move(move[0], move[1])
@@ -235,11 +235,15 @@ def _pick_a_level():
     onlyfiles.append(None)
     return onlyfiles
 
-for level in _pick_a_level():
-    FILE = level
-    for moves in [1,3,5,10]:
-        print("----------")
-        print("%s -> %d" % (FILE, moves))
-        print("----------")
-        bot = QuebraDoceAI(None)
-        bot.do_playouts(n=100, n_moves=moves)
+# for level in _pick_a_level():
+#     FILE = level
+#     for moves in [1,3,5,10]:
+#         print("----------")
+#         print("%s -> %d" % (FILE, moves))
+#         print("----------")
+#         bot = QuebraDoceAI(None)
+#         bot.do_playouts(n=100, n_moves=moves)
+
+bot = QuebraDoceAI(None)
+FILE = 'levels/level77.csv'
+bot.do_playouts(n=100, n_moves=1)
