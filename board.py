@@ -51,6 +51,40 @@ class Board(pygame.sprite.Sprite):
         self._set_info()
         self._create_level()
 
+    def copy_level(self, level):
+        for x in range(9):
+            for y in range(9):
+                self.level[x][y] = copy.deepcopy(level[x][y])
+        pass
+
+
+    def _print_board(self):
+        for i in range(9):
+            for j in range(9):
+                p = self.level[i][j]
+                string = ''
+                if p is None:
+                    string += '_'
+                elif type(p) is piece.Block:
+                    string += 'X'
+                elif type(p) is piece.Objective:
+                    string += "O"
+                elif type(p) is piece.Simple:
+                    string += "s"
+                elif type(p) is piece.Protection:
+                    string += "p"
+                elif type(p) is piece.Stripped:
+                    string += "S"
+                elif type(p) is piece.Wrapped:
+                    string += "W"
+                elif type(p) is piece.Bomb:
+                    string += "B"
+                else:
+                    string += "_"
+                print("%s " % string, end="")
+            print("")
+        print("")
+
     # Retorna o estado do random
     def get_random_state(self):
         if self.state is None:
@@ -375,17 +409,21 @@ class Board(pygame.sprite.Sprite):
         # Verifica a linha
         if row >= 3:
             delete = True
-            for i in range(p.x - left, p.x):
-                self._destroy_single_piece(self.level[i][p.y])
-            for i in range(p.x +1, p.x + right + 1):
+            # for i in range(p.x - left, p.x):
+            #     self._destroy_single_piece(self.level[i][p.y])
+            # for i in range(p.x +1, p.x + right + 1):
+            #     self._destroy_single_piece(self.level[i][p.y])
+            for i in range(p.x - left, p.x + right + 1):
                 self._destroy_single_piece(self.level[i][p.y])
         
         # Verifica a Coluna
         if col >= 3:
             delete = True
-            for j in range(p.y - top, p.y):
-                self._destroy_single_piece(self.level[p.x][j])
-            for j in range(p.y + 1, p.y + bottom + 1):
+            # for j in range(p.y - top, p.y):
+            #     self._destroy_single_piece(self.level[p.x][j])
+            # for j in range(p.y + 1, p.y + bottom + 1):
+            #     self._destroy_single_piece(self.level[p.x][j])
+            for j in range(p.y - top, p.y + bottom + 1):
                 self._destroy_single_piece(self.level[p.x][j])
         
         # Se a peça foi deletada, exclui ela
@@ -393,7 +431,7 @@ class Board(pygame.sprite.Sprite):
 
             # Mas caso tenha uma nova peça gerada, coloca
             # ela nesta posição
-            self._destroy_single_piece(self.level[p.x][p.y])
+            #self._destroy_single_piece(self.level[p.x][p.y])
             if new_piece is not None:
                 self.level[p.x][p.y] = new_piece
             
@@ -469,8 +507,7 @@ class Board(pygame.sprite.Sprite):
 
                                 # Se gerou uma nova possibilidade, destruir!
                                 if self._check_board(self.level):
-                                    return self._destroy_pieces(
-                                        [self.level[x][i]], factor=factor)
+                                    return self._destroy_pieces([self.level[x][i]], factor=factor)
                         
                         # Já adicionou peças o suficiente,
                         # pode pular pra próxima posição
@@ -629,15 +666,10 @@ class Board(pygame.sprite.Sprite):
 
     # Usado para eliminar esta peça do campo
     def _eliminate_piece(self, p):
-        self.points += p.points
-        self.level[p.x][p.y] = None
-
-        # print("ELIMINAÇÃO!")
-        # print("-----------")
-        # print("Peça de tipo:", type(p) )
-        # print("Posição: (%d,%d)" % (p.x, p.y))
-        # print("Tipo:", p.type)
-        # print("----------")
+        if p is not None:
+            self.piece_destroyed += 1
+            self.points += p.points
+            self.level[p.x][p.y] = None
 
     # Elimina a linha e a coluna ao mesmo tempo [FEITO]
     def _special_double_stripped(self, p):
@@ -745,6 +777,8 @@ class Board(pygame.sprite.Sprite):
             # Percorre toda a linha
             for x in range(9):
                 aux_p = self.level[x][y]
+                # if self._can_destroy(aux_p):
+                #     self._eliminate_piece(aux_p)
                 self._destroy_single_piece(aux_p)
 
         # Se for False, é Coluna
@@ -754,7 +788,9 @@ class Board(pygame.sprite.Sprite):
             # Percorre toda a coluna
             for y in range(9):
                 aux_p = self.level[x][y]
-                self._destroy_single_piece(aux_p)
+                if self._can_destroy(aux_p):
+                    self._eliminate_piece(aux_p)
+                #self._destroy_single_piece(aux_p)
 
     # elimina as 8 peças a volta dela [FEITO]
     def _special_wrapped(self, p, size=1):
@@ -763,12 +799,15 @@ class Board(pygame.sprite.Sprite):
         if p is None:
             return
 
+        #self._eliminate_piece(p)
         x, y, end_x, end_y = self._get_wrapped_size(p, size)
         
         # Percorre toda a área
         for i in range(x, end_x):
             for j in range(y, end_y):
                 aux_p = self.level[i][j]
+                # if self._can_destroy(aux_p):
+                #     self._eliminate_piece(aux_p)
                 self._destroy_single_piece(aux_p)
 
     # Retorna os intervalos do tipo goma [FEITO]
@@ -823,31 +862,29 @@ class Board(pygame.sprite.Sprite):
         if p is None:
             return 
 
-        # Aumenta a quantidade de peças destruidas
-        self.piece_destroyed += 1
-
         # Se for peça especial, ativa ela
         if self._is_special(p):
-            # Destroi a peça para não ter efeito duplo
-            self._eliminate_piece(p)
-            self._special_type(p)
+            return self._special_type(p)
         
         # Se não for Bloqueio ou objetivo, exclui
         elif self._can_destroy(p):
             # Destroi a peça para não ter efeito duplo
-            self._eliminate_piece(p)
+            return self._eliminate_piece(p)
 
     # Decide qual o tipo da peça e ativa seu poder [FEITO]
     def _special_type(self, p):
         
+        # Elimina a peça
+        self._eliminate_piece(p)
+
         if type(p) is None:
             return
         elif type(p) is piece.Stripped:
-            self._special_stripped(p)
+            return self._special_stripped(p)
         elif type(p) is piece.Wrapped:
-            self._special_wrapped(p)
+            return self._special_wrapped(p)
         elif type(p) is piece.Bomb:
-            self._special_bomb(None)
+            return self._special_bomb(None)
 
     # Verifica se é uma peça especial
     def _is_special(self, p):
@@ -896,15 +933,20 @@ class Board(pygame.sprite.Sprite):
         if p1 is None or p2 is None:
             return False
 
+        # Elimina as peças do campo pra não ter efeito duplo
+        if self._is_special(p1) and self._is_special(p2):
+            self._eliminate_piece(p1)
+            self._eliminate_piece(p2)
+        elif type(p1) is piece.Bomb:
+            self._eliminate_piece(p1)
+        elif type(p2) is piece.Bomb:
+            self._eliminate_piece(p2)
+
         # Caso os 2 tipos sejam iguais
-        elif type(p1) is type(p2):
+        if type(p1) is type(p2):
 
             # Se for tipo Listrado:
             if type(p1) is piece.Stripped:
-
-                # Destroi as peças para não ter efeito duplo
-                self._eliminate_piece(p1)
-                self._eliminate_piece(p2)
 
                 # Elimina a linha e a coluna ao mesmo tempo
                 self._special_double_stripped(p1)
@@ -913,20 +955,12 @@ class Board(pygame.sprite.Sprite):
             # Se for tipo Goma
             elif type(p1) is piece.Wrapped:
 
-                # Destroi as peças para não ter efeito duplo
-                self._eliminate_piece(p1)
-                self._eliminate_piece(p2)
-
                 # Elimina as 24 peças em volta
                 self._special_double_wrapped(p1)
                 return True
             
             # Se for tipo Bomba
             elif type(p1) is piece.Bomb:
-
-                # Destroi as peças para não ter efeito duplo
-                self._eliminate_piece(p1)
-                self._eliminate_piece(p2)
 
                 # Destroi todas as peças do campo
                 self._special_double_bomb()
@@ -941,20 +975,12 @@ class Board(pygame.sprite.Sprite):
                 # Se a segunda peça for Goma
                 if type(p2) is piece.Wrapped:
 
-                    # Destroi as peças para não ter efeito duplo
-                    self._eliminate_piece(p1)
-                    self._eliminate_piece(p2)
-
                     # Elimina 3 linhas e 3 colunas
                     self._special_stripped_wrapped(p1)
                     return True
 
                 # Se a segunda peça for Bomba
                 elif type(p2) is piece.Bomb:
-
-                    # Destroi as peças para não ter efeito duplo
-                    self._eliminate_piece(p1)
-                    self._eliminate_piece(p2)
 
                     # Transforma todas as peças do mesmo tipo
                     # em listradas e ativa elas
@@ -967,20 +993,12 @@ class Board(pygame.sprite.Sprite):
                 # Se a segunda peça for Listrada
                 if type(p2) is piece.Stripped:
 
-                    # Destroi as peças para não ter efeito duplo
-                    self._eliminate_piece(p1)
-                    self._eliminate_piece(p2)
-
                     # Elimina 3 linhas e 3 colunas
                     self._special_stripped_wrapped(p1)
                     return True
                 
                 # Se a segunda peça for Bomba
                 elif type(p2) is piece.Bomb:
-
-                    # Destroi as peças para não ter efeito duplo
-                    self._eliminate_piece(p1)
-                    self._eliminate_piece(p2)
 
                     # Transforma todas as peças do mesmo tipo
                     # em gomas, e ativa elas
@@ -993,10 +1011,6 @@ class Board(pygame.sprite.Sprite):
                 # Se a segunda peça for Listrada
                 if type(p2) is piece.Stripped:
 
-                    # Destroi as peças para não ter efeito duplo
-                    self._eliminate_piece(p1)
-                    self._eliminate_piece(p2)
-
                     # Transforma todas as peças do mesmo tipo
                     # em listradas e ativa elas
                     self._special_stripped_bomb(p2)
@@ -1004,10 +1018,6 @@ class Board(pygame.sprite.Sprite):
                 
                 # Se a segunda peça for Goma
                 elif type(p2) is piece.Wrapped:
-
-                    # Destroi as peças para não ter efeito duplo
-                    self._eliminate_piece(p1)
-                    self._eliminate_piece(p2)
 
                     # Transforma todas as peças do mesmo tipo
                     # em gomas, e ativa elas
@@ -1017,10 +1027,6 @@ class Board(pygame.sprite.Sprite):
         # Se alguma das peças for Bomba neste momento, a outra é 
         # uma peça simples
         if (type(p1) is piece.Bomb) or (type(p2) is piece.Bomb):
-            
-            # Destroi as peças para não ter efeito duplo
-            self._eliminate_piece(p1)
-            self._eliminate_piece(p2)
 
             # Ativa o poder da Peça BOMBA na peça Simples
             if p1.type != -1:

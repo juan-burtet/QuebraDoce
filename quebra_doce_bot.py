@@ -4,8 +4,13 @@ import math
 import random
 import copy
 import time
+from os import listdir
+from os.path import isfile, join
 
 import board
+
+
+FILE = None
 
 '''
 Classe que Controla a quantidade de Simulações feitas e guarda o
@@ -57,9 +62,28 @@ class QuebraDoceAI:
         else:
             return 1.0
 
+    def best_move(self, board, n):
+        moves = board.possible_moves()
+        children = []
+        i = 0
+        while i < n:
+        #for _ in range(n):
+            aux = copy.deepcopy(board)
+            aux.copy_level(board.level)
+            move = random.choice(moves)
+            try:
+                aux.test_move(move[0], move[1])
+                children.append((move, self.get_reward(aux)))
+                i += 1
+            except KeyboardInterrupt:
+                exit(1)
+            except:
+                print("Deu probleminha, tenta de novo")
+        
+        move = max(children, key=lambda x: x[1])
+        return move[0]
 
-
-    def do_playouts(self, n=100):
+    def do_playouts(self, n=100, n_moves=1):
         board = get_board()
         self.w_points = board.w_points
         self.blocks = board.blocks
@@ -67,39 +91,56 @@ class QuebraDoceAI:
 
         begin = time.time()
         self.rewards = 0
-        for i in range(n):
+        i = 1
+
+        print("\nDoing %d simulations" % n)
+        print("With %d possible moves" % n_moves)
+        print("In the Level: %s\n" % FILE)
+
+        while i <= n:
+        #for i in range(n):
             match = time.time()
-            i += 1
             print("Bot play #%d" % i)
 
-            board = get_board()
-            while True:
-                if board.moves == 0 or board.is_finished():
-                    break
+            try:
+                board = get_board()
+                while True:
+                    if board.moves == 0 or board.is_finished():
+                        break
+                    
+                    move = None
+                    if n_moves > 1:
+                        move = self.best_move(board, n_moves)
+                    else:
+                        moves = board.possible_moves()
+                        move = random.choice(moves)
+                    board.test_move(move[0], move[1])
                 
-                moves = board.possible_moves()
-                move = random.choice(moves)
-                board.test_move(move[0], move[1])
-            
-            if board.points > self.max:
-                self.max = board.points
-            if board.points < self.min:
-                self.min = board.points
-            self.media += board.points 
+                if board.points > self.max:
+                    self.max = board.points
+                if board.points < self.min:
+                    self.min = board.points
+                self.media += board.points 
 
-            print("Points: %d/%d" % (board.points, board.w_points))
-            print("Moves:", board.moves)
-            print("Blocks:", board.blocks)
-            print("Canes:", board.canes)
-            print("Tempo:", time.time() - match)
-            print("Reward:", self.get_reward(board))
-            print("")
+                print("Points: %d/%d" % (board.points, board.w_points))
+                print("Moves:", board.moves)
+                print("Blocks:", board.blocks)
+                print("Canes:", board.canes)
+                print("Tempo:", time.time() - match)
+                print("Reward:", self.get_reward(board))
+                print("")
 
-            if board.is_finished():
-                self.wins += 1
-            
-            self.rewards += self.get_reward(board)
-            self.plays += 1
+                if board.is_finished():
+                    self.wins += 1
+                
+                self.rewards += self.get_reward(board)
+                self.plays += 1
+                i += 1
+            except KeyboardInterrupt:
+                exit(1)
+            except:
+                print("Jogada deu merda")
+                print("")
         
         print("Total Plays:", self.plays)
         print("Total Wins:", self.wins)
@@ -109,6 +150,24 @@ class QuebraDoceAI:
         print("Min points:", self.min)
         print("Mean:", float(float(self.media)/float(self.plays)))
         print("Tempo Total:", time.time() - begin)
+
+        if FILE is not None:
+            string = FILE.replace("levels/", "")
+        else:
+            string = "None"
+        
+        with open("tests/%s_%d_%d.txt" % (string, n, n_moves), mode="w+") as f:
+            f.write("Doing %d simulations\n" % n)
+            f.write("With %d possible moves\n" % n_moves)
+            f.write("In the Level: %s\n\n" % string)
+            f.write("Total Plays: %d\n" % self.plays)
+            f.write("Total Wins: %d\n" % self.wins)
+            f.write("Total reward: %s\n" % self.rewards)
+            f.write("Win/Ratio: %s\n" % float(self.wins/self.plays))
+            f.write("Max points: %s\n" % self.max)
+            f.write("Min points: %s\n" % self.min)
+            f.write("Mean: %s\n" % float(float(self.media)/float(self.plays)))
+            f.write("Tempo Total: %s\n" % (str(time.time() - begin)))
 
 '''
 Classe que funciona como uma Monte Carlo Tree Search, que
@@ -167,7 +226,20 @@ class Node(ABC):
 
 
 def get_board():
-    return board.Board(file=None)
+    return board.Board(file=FILE)
 
-bot = QuebraDoceAI(None)
-bot.do_playouts()
+# Pega um nível aleatório da pasta levels
+def _pick_a_level():
+    mypath = "levels/"
+    onlyfiles = [join(mypath, f) for f in listdir(mypath) if isfile(join(mypath, f))]
+    onlyfiles.append(None)
+    return onlyfiles
+
+for level in _pick_a_level():
+    FILE = level
+    for moves in [1,3,5,10]:
+        print("----------")
+        print("%s -> %d" % (FILE, moves))
+        print("----------")
+        bot = QuebraDoceAI(None)
+        bot.do_playouts(n=100, n_moves=moves)
