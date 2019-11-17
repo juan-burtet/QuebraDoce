@@ -61,5 +61,16 @@ def load_level(file_csv):
     for i in range(9):
         line = file.readline()
         level.append([int(x) for x in line.split(',')])
+
+    return info, level
+
+def load_level_string(string):
+    lines = string.split("\n")
+    info = [int(x) for x in lines[0].split(',')]
+
+    level = []
+    for i in range(1, 10):
+        line = lines[i]
+        level.append([int(x) for x in line.split(',')])
     
     return info, level

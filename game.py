@@ -9,6 +9,18 @@ import piece
 import board
 import game_utils
 
+MAP_STRING = "21,0,5 \n" 
+MAP_STRING += "1,1,1,1,1,1,1,0,0 \n"
+MAP_STRING += "1,1,1,2,1,2,1,1,0 \n"
+MAP_STRING += "1,1,2,2,1,2,2,1,1 \n"
+MAP_STRING += "1,2,2,0,1,0,2,2,1 \n"
+MAP_STRING += "1,2,2,2,1,2,2,2,1 \n"
+MAP_STRING += "1,2,2,0,1,0,2,2,1 \n"
+MAP_STRING += "1,1,2,2,1,2,2,1,1 \n"
+MAP_STRING += "0,1,1,2,1,2,1,1,1 \n"
+MAP_STRING += "0,0,1,1,1,1,1,1,1 \n"
+
+
 size = width, height = 800, 600
 
 '''
@@ -171,7 +183,10 @@ class Game(pygame.sprite.Sprite):
     # Inicializa as informações necessárias pro Game_Screen
     def _set_game_screen(self):
         self.status = 'game'
-        self.board = board.Board(file=self._pick_a_level())
+        #self.board = board.Board()
+        #self.board = board.Board(file=self._pick_a_level())
+        #self.board = board.Board(string=MAP_STRING)
+        self.board = board.Board(file='levels/0.9_0.88.csv')
         self._get_objective_image()
         self.blocks = self.board.blocks
         self.objectives = self.board.canes

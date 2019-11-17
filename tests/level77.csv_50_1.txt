@@ -1,0 +1,13 @@
+Doing 50 simulations
+With 1 possible moves
+In the Level: level77.csv
+
+Total Plays: 50
+Total Wins: 33
+Total reward: 46.88888888888889
+Win/Ratio: 0.66
+Reward/Ratio: 0.9377777777777778
+Max points: 134480
+Min points: 10400
+Mean: 48364.0
+Tempo Total: 21.8098783493042

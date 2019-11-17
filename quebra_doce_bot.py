@@ -6,9 +6,10 @@ import copy
 import time
 from os import listdir
 from os.path import isfile, join
+from multiprocessing import Lock, Process, Queue, current_process
+import multiprocessing as mp
 
 import board
-
 
 FILE = None
 
@@ -18,16 +19,24 @@ Human Sucess Rate do campo passado
 '''
 class QuebraDoceAI:
 
-    def __init__(self, board):
-        self.board = board # Campo que contem o jogo
+    def __init__(self, file=None, string=None):
         self.plays = 0 # Quantidade de jogdadas
         self.wins = 0 # Quantidade de vitórias
         self.max = -1
         self.min = 99999999
         self.media = 0
         self.rewards = 0
+        self.file = file
+        self.map_string = string
     
+    def get_board(self):
+        return board.Board(file=self.file, string=self.map_string)
+
     def get_reward(self, board):
+        p_blocks = 3
+        p_canes = 3
+        p_points = 1
+
         count = 0
         total = 0
         if self.blocks > 0:
@@ -36,7 +45,7 @@ class QuebraDoceAI:
             else:
                 blocks = 0
             total += blocks
-            count += 1
+            count += p_blocks
         
         if self.canes > 0:
             if self.canes != board.canes:
@@ -45,7 +54,7 @@ class QuebraDoceAI:
                 canes = 0
             
             total += canes
-            count += 1
+            count += p_canes
 
         if self.w_points > 0:
             points = 0
@@ -55,7 +64,7 @@ class QuebraDoceAI:
                 points = board.points/self.w_points
             
             total += points
-            count += 1
+            count += p_points
         
         if count > 0:
             return total/count
@@ -83,27 +92,26 @@ class QuebraDoceAI:
         move = max(children, key=lambda x: x[1])
         return move[0]
 
-    def do_playouts(self, n=100, n_moves=1):
-        board = get_board()
-        self.w_points = board.w_points
-        self.blocks = board.blocks
-        self.canes = board.canes
+    def _playout(self, n, n_moves, queue, id, info):
+        data = {}
+        data['max'] = -1
+        data['min'] = 9999999
+        data['media'] = 0
+        data['wins'] = 0
+        data['plays'] = 0
+        data['rewards'] = 0
 
-        begin = time.time()
-        self.rewards = 0
         i = 1
-
-        print("\nDoing %d simulations" % n)
-        print("With %d possible moves" % n_moves)
-        print("In the Level: %s\n" % FILE)
-
+        breaked = 0
         while i <= n:
-        #for i in range(n):
+
+            if breaked > 5:
+                break
+
             match = time.time()
-            print("Bot play #%d" % i)
 
             try:
-                board = get_board()
+                board = self.get_board()
                 while True:
                     if board.moves == 0 or board.is_finished():
                         break
@@ -116,40 +124,133 @@ class QuebraDoceAI:
                         move = random.choice(moves)
                     board.test_move(move[0], move[1])
                 
-                if board.points > self.max:
-                    self.max = board.points
-                if board.points < self.min:
-                    self.min = board.points
-                self.media += board.points 
-
-                print("Points: %d/%d" % (board.points, board.w_points))
-                print("Moves:", board.moves)
-                print("Blocks:", board.blocks)
-                print("Canes:", board.canes)
-                print("Tempo:", time.time() - match)
-                print("Reward:", self.get_reward(board))
-                print("")
+                if board.points > data['max']:
+                    data['max'] = board.points
+                if board.points < data['min']:
+                    data['min'] = board.points
+                data['media'] += board.points 
 
                 if board.is_finished():
-                    self.wins += 1
+                    data['wins'] += 1
                 
-                self.rewards += self.get_reward(board)
-                self.plays += 1
+                data['rewards'] += self.get_reward(board)
+                data['plays'] += 1
                 i += 1
+
+                if info:
+                    if i % 10 == 0:
+                        print("Process %d played %d times" % (id, i))
+                
+                breaked = 0
             except KeyboardInterrupt:
                 exit(1)
             except:
-                print("Jogada deu merda")
-                print("")
+                breaked += 1
+                if info:
+                    print("Bot_play #%d in Process %d failed" % (id, i))
         
-        print("Total Plays:", self.plays)
-        print("Total Wins:", self.wins)
-        print("Total reward:", self.rewards)
-        print("Win/Ratio:", float(self.wins/self.plays))
-        print("Max points:", self.max)
-        print("Min points:", self.min)
-        print("Mean:", float(float(self.media)/float(self.plays)))
-        print("Tempo Total:", time.time() - begin)
+        if info:
+            print("Process %d FINISHED" % id)
+        queue.put(data)
+
+    def _print_data(self, i, data):
+        print("Results from Process", i)
+        for key, value in data.items():
+            print("%s: %s" % (key, value))
+        print("")
+
+    def _evaluate(self):
+        p1, p2 = 3, 1
+        win_ratio = float(self.wins/self.plays) * p1
+        reward_ratio = float(self.rewards/self.plays) * p2
+        return (win_ratio+reward_ratio)/(p1+p2)
+
+    def do_playouts(self, n=100, n_moves=1, info=True):
+        board = self.get_board()
+        self.w_points = board.w_points
+        self.blocks = board.blocks
+        self.canes = board.canes
+
+        if info:
+            print("\nDoing %d simulations" % n)
+            print("With %d possible moves" % n_moves)
+            print("In the Level: %s\n" % FILE)
+            print("")
+
+        begin = time.time()
+
+        # Pega a quantidade de cpus e divide os valores
+        cpu_count = mp.cpu_count()
+        values = [int(n/cpu_count) for i in range(cpu_count)]
+
+        # Adiciona os valores extras
+        extra = n % cpu_count 
+        i = 0
+        while extra > 0:
+            values[i] += 1
+            i += 1
+            extra -= 1
+
+        # Resultado dos processos
+        results = Queue()
+
+        # Manda para os processos
+        procs = []
+
+        if info:
+            print("Using %d process" % cpu_count)
+        for i in range(cpu_count):
+
+            if info:
+                print("\tProcess %d simulates %d times" % (i, values[i]))
+
+            proc = Process(
+                target=self._playout, 
+                args=(values[i], n_moves, results, i, info))
+            procs.append(proc)
+            proc.start()
+        
+        if info:
+            print("")
+            print("Simulation Started\n")
+        
+        # Recebe os processos
+        for proc in procs:
+            proc.join()
+        
+        if info:
+            print("Simulation Finished\n")
+
+        # Adiciona os resultados de cada Processo
+        while not results.empty():
+            data = results.get()
+            self.plays += data['plays']
+            self.wins += data['wins']
+            self.rewards += data['rewards']
+            self.media += data['media']
+
+            if self.max < data['max']:
+                self.max = data['max']
+            if self.min > data['min']:
+                self.min = data['min']
+
+            if info:
+                self._print_data(i, data)
+
+        if self.plays == 0:
+            #print("Mapa inválido!")
+            return 0
+
+        if info:
+            print("Total Plays:", self.plays)
+            print("Total Wins:", self.wins)
+            print("Total reward:", self.rewards)
+            print("Win/Ratio:", float(self.wins/self.plays))
+            print("Reward/Ratio: %s" % float(self.rewards/self.plays))
+            print("Max points:", self.max)
+            print("Min points:", self.min)
+            print("Mean:", float(float(self.media)/float(self.plays)))
+            print("Tempo Total:", time.time() - begin)
 
         if FILE is not None:
             string = FILE.replace("levels/", "")
@@ -164,69 +265,15 @@ class QuebraDoceAI:
             f.write("Total Wins: %d\n" % self.wins)
             f.write("Total reward: %s\n" % self.rewards)
             f.write("Win/Ratio: %s\n" % float(self.wins/self.plays))
+            f.write("Reward/Ratio: %s\n" % float(self.rewards/self.plays))
+            f.write("Evaluate: %s\n" % self._evaluate())
             f.write("Max points: %s\n" % self.max)
             f.write("Min points: %s\n" % self.min)
             f.write("Mean: %s\n" % float(float(self.media)/float(self.plays)))
             f.write("Tempo Total: %s\n" % (str(time.time() - begin)))
-
-'''
-Classe que funciona como uma Monte Carlo Tree Search, que
-faz uma jogada do jogo e indica se houve vitória ou não
-'''
-class MCTS:
-
-    def __init__(self):
-        pass
-
-'''
-Classe que funciona como um Nó para a MCTS
-'''
-class Node(ABC):
-    """
-    A representation of a single board state.
-    MCTS works by constructing a tree of these Nodes.
-    Could be e.g. a chess or checkers board state.
-    """
-
-    def __init__(self, board):
-        self.board = copy.deepcopy(board)
-
-    def find_children(self):
-        return self.board.possible_moves()
-
-    # @abstractmethod
-    # def find_children(self):
-    #     "All possible successors of this board state"
-    #     return set()
-
-    @abstractmethod
-    def find_random_child(self):
-        "Random successor of this board state (for more efficient simulation)"
-        return None
-
-    @abstractmethod
-    def is_terminal(self):
-        "Returns True if the node has no children"
-        return True
-
-    @abstractmethod
-    def reward(self):
-        "Assumes `self` is terminal node. 1=win, 0=loss, .5=tie, etc"
-        return 0
-
-    @abstractmethod
-    def __hash__(self):
-        "Nodes must be hashable"
-        return 123456789
-
-    @abstractmethod
-    def __eq__(node1, node2):
-        "Nodes must be comparable"
-        return True
-
-
-def get_board():
-    return board.Board(file=FILE)
+        
+        # Retorna a avaliação do Bot
+        return self._evaluate()
 
 # Pega um nível aleatório da pasta levels
 def _pick_a_level():
@@ -243,7 +290,3 @@ def _pick_a_level():
 #         print("----------")
 #         bot = QuebraDoceAI(None)
 #         bot.do_playouts(n=100, n_moves=moves)
-
-bot = QuebraDoceAI(None)
-FILE = 'levels/level77.csv'
-bot.do_playouts(n=100, n_moves=1)

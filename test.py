@@ -12,11 +12,12 @@ class Foo:
         data['Oi'] = random.randint(0, 5)
         data['Tchau'] = random.randint(0, 5)
 
-        # print("Processo:", i)
-        # print("Oi:", data['Oi'])
-        # print("Tchau", data['Tchau'])
+        print("Processo:", i)
+        print("Oi:", data['Oi'])
+        print("Tchau", data['Tchau'])
 
         #r = data
+        results.put((i, data))
         return i
 
     def bar(self):
@@ -24,7 +25,7 @@ class Foo:
         procs = []
         for i in range(mp.cpu_count()):
 
-            proc = Process(target=self.jar, args=(i,self.f))
+            proc = Process(target=self.jar, args=(i,self.results))
             procs.append(proc)
             proc.start()
             
@@ -33,7 +34,9 @@ class Foo:
 
 foo = Foo()
 foo.bar()
-print(foo.f)
-# results = foo.results
-# for data in results:
-#     print(data)
+results = foo.results
+while not results.empty():
+    q = results.get()
+    print(q[0])
+    print(q[1])
+    print("")

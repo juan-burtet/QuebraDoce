@@ -28,7 +28,7 @@ toda a movimentação e objetivos.
 class Board(pygame.sprite.Sprite):
 
     # Inicializador
-    def __init__(self, file=None):
+    def __init__(self, file=None, string=None):
         pygame.sprite.Sprite.__init__(self)
         
         # Estado do Random
@@ -37,6 +37,8 @@ class Board(pygame.sprite.Sprite):
         # Iniciaca as informações com o arquivo
         if file is not None:
             self.info, self.map = game_utils.load_level(file)
+        elif string is not None:
+            self.info, self.map = game_utils.load_level_string(string)
         else:
             self.info, self.map = None, None
 
@@ -56,7 +58,6 @@ class Board(pygame.sprite.Sprite):
             for y in range(9):
                 self.level[x][y] = copy.deepcopy(level[x][y])
         pass
-
 
     def _print_board(self):
         for i in range(9):
@@ -186,11 +187,11 @@ class Board(pygame.sprite.Sprite):
             self.w_points = info[1]
             self.types = info[2]
         else:
-            self.w_points = 50000
+            self.w_points = 9999999
             self.blocks = 0
             self.canes = 0
-            self.moves = 30
-            self.types = 5
+            self.moves = 75
+            self.types = 6
         
         # Atualiza os objetivos
         self._update_objectives()
@@ -450,15 +451,25 @@ class Board(pygame.sprite.Sprite):
         for p in pieces:
             self._check_combinations(p, factor)
 
+        # Verifica se um objetivo foi encontrado
+        found_objective = False
+
         # Percorre todas as colunas
         for x in range(9):
             
+            blocks = True
+
             # Vai da posição mais baixa até ao topo
             for y in reversed(range(9)):
 
-                # Se for a ultima linha e tiver um objetivo, exclui ele do campo!
-                if y == 8 and type(self.level[x][y]) is piece.Objective:
+                # Se encontrou o objetivo enquanto tem blocks em baixo, deleta!
+                if type(self.level[x][y]) is piece.Objective and blocks:
+                    found_objective = True
                     self._eliminate_piece(self.level[x][y])
+
+                # Se não for block
+                if type(self.level[x][y]) is not piece.Block:
+                    blocks = False
 
                 # Se a posição for None, é necessário
                 # buscar as posições     
@@ -512,6 +523,22 @@ class Board(pygame.sprite.Sprite):
                         # Já adicionou peças o suficiente,
                         # pode pular pra próxima posição
                         break
+        
+        # Encontrou objetivo, destroi novamente
+        if found_objective:
+            return self._destroy_pieces([])
+
+        # Verifica as peças na ultima posição
+        destroy = False
+        for x in range(9):
+            if type(self.level[x][8]) is piece.Objective:
+                self._eliminate_piece(self.level[x][8])
+                destroy = True
+        
+        # Se destruiu, refazer novamente
+        if destroy:
+            return self._destroy_pieces([])
+
 
         # Atualiza os labels dos objetivos
         self._create_labels(first=False)

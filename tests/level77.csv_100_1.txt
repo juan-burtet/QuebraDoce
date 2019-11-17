@@ -3,10 +3,11 @@ With 1 possible moves
 In the Level: level77.csv
 
 Total Plays: 100
-Total Wins: 65
-Total reward: 93.88888888888883
-Win/Ratio: 0.65
-Max points: 116700
-Min points: 18240
-Mean: 50737.2
-Tempo Total: 32.94603896141052
+Total Wins: 60
+Total reward: 94.0
+Win/Ratio: 0.6
+Reward/Ratio: 0.94
+Max points: 105400
+Min points: 14820
+Mean: 52134.0
+Tempo Total: 37.20544409751892

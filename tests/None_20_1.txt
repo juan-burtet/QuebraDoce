@@ -1,0 +1,13 @@
+Doing 20 simulations
+With 1 possible moves
+In the Level: None
+
+Total Plays: 20
+Total Wins: 0
+Total reward: 4.299621506880349
+Win/Ratio: 0.0
+Reward/Ratio: 0.21498107534401747
+Max points: 172280
+Min points: 35600
+Mean: 73677.0
+Tempo Total: 8.505277156829834
