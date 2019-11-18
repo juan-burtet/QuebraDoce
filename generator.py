@@ -336,10 +336,11 @@ class QuebraDoceGenerator:
         print("Arquivo -%s- gerado!" % file_name)
         print("--------------------\n")
 
-for x in [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]:
-    print("Tentando gerar um mapa com target =", x)
-    print()
-    generator = QuebraDoceGenerator(25, 10, 0.75, 0.25)
-    generator.generate_level(x)
+#for x in [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]:
+x = 1.0
+print("Tentando gerar um mapa com target =", x)
+print()
+generator = QuebraDoceGenerator(25, 10, 0.75, 0.25)
+generator.generate_level(x)
 
 

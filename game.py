@@ -186,7 +186,7 @@ class Game(pygame.sprite.Sprite):
         #self.board = board.Board()
         #self.board = board.Board(file=self._pick_a_level())
         #self.board = board.Board(string=MAP_STRING)
-        self.board = board.Board(file='levels/0.9_0.88.csv')
+        self.board = board.Board(file='levels/candy crush/level77.csv')
         self._get_objective_image()
         self.blocks = self.board.blocks
         self.objectives = self.board.canes
