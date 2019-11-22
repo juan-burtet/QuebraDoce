@@ -166,7 +166,8 @@ class QuebraDoceAI:
         total = p2
         if win_ratio > 0:
             total += p1
-        return (win_ratio+reward_ratio)/total
+        #return (win_ratio+reward_ratio)/2
+        return reward_ratio
 
     def do_playouts(self, n=100, n_moves=1, info=True):
         board = self.get_board()
@@ -285,11 +286,17 @@ def _pick_a_level():
     onlyfiles.append(None)
     return onlyfiles
 
-# for level in _pick_a_level():
+
+# MAPS = [
+#     "levels/0.25_0.25.csv",
+#     "levels/0.5_0.50.csv",
+#     "levels/0.75_0.75.csv"
+# ]
+
+# for level in MAPS:
 #     FILE = level
-#     for moves in [1,3,5,10]:
-#         print("----------")
-#         print("%s -> %d" % (FILE, moves))
-#         print("----------")
-#         bot = QuebraDoceAI(None)
-#         bot.do_playouts(n=100, n_moves=moves)
+#     print("----------")
+#     print("%s -> %d" % (FILE, 1))
+#     print("----------")
+#     bot = QuebraDoceAI(file=level)
+#     print(bot.do_playouts(n=100, n_moves=1, info=False))

@@ -10,7 +10,7 @@ class QuebraDoceGenerator:
         self.pop_size = pop_size
         self.crossover_rate = crossover_rate
         self.mutation_rate = mutation_rate
-        self.n_simulations = 75
+        self.n_simulations = 100
         self.n_moves = 1
         self.bias = 0.00
         self.best_distance = 1.0
@@ -26,14 +26,14 @@ class QuebraDoceGenerator:
             )
 
     def generate_moves(self):
-        return random.randint(5, 40)
+        return random.randint(5, 30)
     
     def generate_types(self):
         return random.randint(4, 6)
     
     def generate_points(self, types):
         x = abs(types - 6)
-        return random.randint(0, 100000 + x*20000)
+        return random.randint(0, 999999999)
 
     # Gera um mapa aleatório
     def _random_level(self):
@@ -379,10 +379,12 @@ class QuebraDoceGenerator:
         print("Arquivo -%s- gerado!" % file_name)
         print("--------------------\n")
 
-for x in [0.25, 0.50, 0.75]:
+
+
+for x in [0.5, 0.8]:
     print("Tentando gerar um mapa com target =", x)
-    print()
-    generator = QuebraDoceGenerator(25, 10, 0.75, 0.01)
+    print() 
+    generator = QuebraDoceGenerator(25, 10, 0.9, 0.3)
     generator.generate_level(x)
 
 

@@ -293,6 +293,10 @@ class Board(pygame.sprite.Sprite):
                     while(check):
                         self.level[x][y] = piece.Simple(x,y,self.types)
                         check = self._check_board(self.level)
+        
+        # Se a fase não possui movimentos, repete de novo
+        if not self._has_moves():
+            return self._create_level(first=False)
 
     # Retorna uma lista com todas as peças
     def get_board(self):
