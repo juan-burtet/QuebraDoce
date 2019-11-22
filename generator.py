@@ -10,9 +10,9 @@ class QuebraDoceGenerator:
         self.pop_size = pop_size
         self.crossover_rate = crossover_rate
         self.mutation_rate = mutation_rate
-        self.n_simulations = 50
+        self.n_simulations = 75
         self.n_moves = 1
-        self.bias = 0.01
+        self.bias = 0.00
         self.best_distance = 1.0
         self.n_kids = n_kids
     
@@ -26,10 +26,10 @@ class QuebraDoceGenerator:
             )
 
     def generate_moves(self):
-        return random.randint(5, 75)
+        return random.randint(5, 40)
     
     def generate_types(self):
-        return random.randint(3, 6)
+        return random.randint(4, 6)
     
     def generate_points(self, types):
         x = abs(types - 6)
@@ -134,15 +134,13 @@ class QuebraDoceGenerator:
         return child
 
     # Muta um nivel
-    def _mutate(self, child):
+    def _mutate(self, child, distance):
         string = ''
         
         # calcula o mutation rate
         # Quanto mais longe do resultado esperando, mais mutação
-        mutation_rate = self.mutation_rate + self.best_distance
-        if mutation_rate > 1.0:
-            mutation_rate = 1.0
-
+        mutation_rate = self.mutation_rate + (distance/10)
+        
         # Divide as linhas
         lines = child.split("\n")
         
@@ -204,18 +202,43 @@ class QuebraDoceGenerator:
     # Cria filhos com a população
     def _create_kids(self, pop):
 
+        # Decide o limite dos melhores
+        limit = 10
+        if self.pop_size < limit:
+            limit = pop_size
+
+        # Pega os melhores
+        pop.sort(key=lambda x: x['distance'])
+        best = pop[:limit]
+        best = copy.deepcopy(best)
+
+        # Cria os N Filhos
         kids = []
         for i in range(self.n_kids):
-            p1 = random.choice(pop)
-            p2 = random.choice(pop)
+
+            # Escolhe aleatoriamente os melhores
+            p1 = random.choice(best)
+            p2 = random.choice(best)
+
+            # Crossover dos pais
             kid = self._crossover([p1,p2])
-            kid = self._mutate(kid)
+
+            # Pega o valor de distância médio dos 2, para
+            # utilizar na mutação
+            value = (p1['distance'] + p2['distance'])/2
+
+            # Muta a criança
+            kid = self._mutate(kid, value)
+
+            # Adiciona a lista de filhos
             data = {
                 'level': kid,
                 'evaluate': 0.0,
                 'distance': 1.0
             }
             kids.append(data)
+        
+        # Retorna os filhos
         return kids
 
     # Mata os filhos ruins
@@ -259,6 +282,7 @@ class QuebraDoceGenerator:
         
         # Percorre tantas gerações
         target_level = None
+        print("--------------------\n")
         print("Objetivo:", target)
         print("Quantidade de Gerações:", n_generations)
         print("Tamanho da População:", self.pop_size)
@@ -274,8 +298,17 @@ class QuebraDoceGenerator:
             print(",", end="")
         print("]")
 
+        # Inicializa o bias
+        self.bias = 0.00
+
+        # Inicializa a melhor distância
+        self.best_distance = 1.0
+
         for gen in range(n_generations):
-            print("Starting generation #%d" % gen)
+            if (gen + 1) % 10 == 0:
+                self.bias += 0.01
+
+            print("Starting generation #%d\n" % gen)
 
             # Recebe a melhor população
             best_pop = self._select(pop)
@@ -284,6 +317,16 @@ class QuebraDoceGenerator:
             # Pega a melhor distância
             if best_pop[0]['distance'] < self.best_distance:
                 self.best_distance = best_pop[0]['distance']
+
+            # Imprime a população atual
+            pop.sort(key=lambda x: x['evaluate'])
+            print(" - Population - ")
+            print("[", end="")
+            for p in pop:
+                print("%.2f" % p['evaluate'], end="")
+                print(",", end="")
+            print("]")
+
 
             # Imprime o melhor da geração
             print(
@@ -336,11 +379,10 @@ class QuebraDoceGenerator:
         print("Arquivo -%s- gerado!" % file_name)
         print("--------------------\n")
 
-#for x in [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]:
-x = 1.0
-print("Tentando gerar um mapa com target =", x)
-print()
-generator = QuebraDoceGenerator(25, 10, 0.75, 0.25)
-generator.generate_level(x)
+for x in [0.25, 0.50, 0.75]:
+    print("Tentando gerar um mapa com target =", x)
+    print()
+    generator = QuebraDoceGenerator(25, 10, 0.75, 0.01)
+    generator.generate_level(x)
 
 

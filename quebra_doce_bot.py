@@ -163,7 +163,10 @@ class QuebraDoceAI:
         p1, p2 = 3, 1
         win_ratio = float(self.wins/self.plays) * p1
         reward_ratio = float(self.rewards/self.plays) * p2
-        return (win_ratio+reward_ratio)/(p1+p2)
+        total = p2
+        if win_ratio > 0:
+            total += p1
+        return (win_ratio+reward_ratio)/total
 
     def do_playouts(self, n=100, n_moves=1, info=True):
         board = self.get_board()

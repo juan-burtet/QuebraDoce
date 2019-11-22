@@ -9,18 +9,6 @@ import piece
 import board
 import game_utils
 
-MAP_STRING = "21,0,5 \n" 
-MAP_STRING += "1,1,1,1,1,1,1,0,0 \n"
-MAP_STRING += "1,1,1,2,1,2,1,1,0 \n"
-MAP_STRING += "1,1,2,2,1,2,2,1,1 \n"
-MAP_STRING += "1,2,2,0,1,0,2,2,1 \n"
-MAP_STRING += "1,2,2,2,1,2,2,2,1 \n"
-MAP_STRING += "1,2,2,0,1,0,2,2,1 \n"
-MAP_STRING += "1,1,2,2,1,2,2,1,1 \n"
-MAP_STRING += "0,1,1,2,1,2,1,1,1 \n"
-MAP_STRING += "0,0,1,1,1,1,1,1,1 \n"
-
-
 size = width, height = 800, 600
 
 '''
@@ -57,6 +45,16 @@ MODE_COLORS['BLOCKS'] = BLUE
 MODE_COLORS['OBJECTIVE'] = GREEN
 MODE_COLORS['MIX'] = PURPLE
 
+'''
+Conjunto de fases Testes
+'''
+TEST_MAPS = [
+    "levels/1.csv",
+    "levels/2.csv",
+    "levels/3.csv"
+]
+
+
 class Game(pygame.sprite.Sprite):
 
     def __init__(self):
@@ -67,6 +65,7 @@ class Game(pygame.sprite.Sprite):
         self.board = None # Campo do jogo
         self.pick = None # Peça escolhida
         self.objective_image = None # Imagem do objeto
+        self.level = 0 # Nível iniciado pelo jogo
 
     def _pygame_init(self):
         # Initialize Everything
@@ -183,10 +182,7 @@ class Game(pygame.sprite.Sprite):
     # Inicializa as informações necessárias pro Game_Screen
     def _set_game_screen(self):
         self.status = 'game'
-        #self.board = board.Board()
-        #self.board = board.Board(file=self._pick_a_level())
-        #self.board = board.Board(string=MAP_STRING)
-        self.board = board.Board(file='levels/1.0_0.88.csv')
+        self.board = board.Board(file=TEST_MAPS[self.level])
         self._get_objective_image()
         self.blocks = self.board.blocks
         self.objectives = self.board.canes
@@ -693,6 +689,21 @@ class Game(pygame.sprite.Sprite):
         self._print_game_points(background)
         self._print_game_moves(background)
         self._print_game_objectives(background)
+    
+    def _print_game_level(self, background):
+
+        # Imprime a String: "MOVES"
+        level = self.level + 1
+        string = "LEVEL %d" % level
+        texts, pos = self._add_nes_text(
+            string,
+            text_size=27,
+            centerx=470,
+            top=-8,
+        )
+
+        for t, p in zip(texts,pos):
+            background.blit(t,p)
 
     # Imprime as informações da Rodada
     def _print_round_info(self, background):
@@ -851,7 +862,14 @@ class Game(pygame.sprite.Sprite):
                 
                 # Se acabou a fase
                 elif self.end:
-                    self._set_start_screen()
+                    if self.win:
+                        self.level += 1
+                    
+                    if self.level <= 2:
+                        self._set_game_screen()
+                    else:
+                        self.level = 0
+                        self._set_start_screen()
 
         # Cria o background da fase
         background = pygame.Surface(self.screen.get_size())
@@ -910,6 +928,9 @@ class Game(pygame.sprite.Sprite):
         # Verifica se é o fim do jogo
         elif self.end:
             self._print_end_game(background)
+
+        # Imprime o nivel da tela
+        self._print_game_level(background)
 
         # Retorna a tela a ser imprimida
         return background
