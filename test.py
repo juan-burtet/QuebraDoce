@@ -7,13 +7,22 @@
 # print("----------")
 
 # x = []
-# for i in range(10):
-#     print("#%d " % i, end="")
-#     bot = ia.QuebraDoceAI(file=level)
-#     y = bot.do_playouts(n=250, n_moves=1, info=False, final=True)
-#     print(y)
-#     x.append(y)
+# times = []
+# with open("tests/rewards_for_simulations.csv", "w+") as f:
+#     f.write("Rodada,10,25,50,100,250,500,\n")
+#     for i in range(10):
+#         f.write("%d," % i)
+#         print(i, "-> ", end="")
+#         for n in [10, 25, 50, 100, 250, 500]:
+#             bot = ia.QuebraDoceAI(file=level)
+#             y = bot.do_playouts(n=n, n_moves=1, info=False, final=False)
+#             f.write("%.3f," % y[0])
+#             if i == 0:
+#                 times.append(y[1])
 
-# print("\nValores resultantes")
-# for v in x:
-#     print("[%.2f, %.2f]" % (v[0], v[1]))
+#             print("- %.3f - " % y[0], end="")
+#         f.write("\n")
+#         print("")
+
+# print(times)
+

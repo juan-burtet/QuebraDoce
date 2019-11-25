@@ -4,11 +4,11 @@ In the Level: None
 
 Total Plays: 250
 Total Wins: 0
-Total reward: 36.50167793336973
+Total reward: 191.7078100248925
 Win/Ratio: 0.0
-Reward/Ratio: 0.1460067117334789
-Evaluate: 0.07300335586673945
-Max points: 68140
-Min points: 13880
-Mean: 31546.64
-Tempo Total: 13.325570821762085
+Reward/Ratio: 0.7668312400995699
+Evaluate: 0.7668312400995699
+Max points: 57400
+Min points: 16440
+Mean: 31806.24
+Tempo Total: 17.077332258224487

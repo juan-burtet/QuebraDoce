@@ -279,7 +279,7 @@ class QuebraDoceAI:
             f.write("Tempo Total: %s\n" % (str(time.time() - begin)))
         
         # Retorna a avaliação do Bot
-        return self._evaluate()
+        return [self._evaluate(), time.time() - begin]
 
 # Pega um nível aleatório da pasta levels
 def _pick_a_level():
