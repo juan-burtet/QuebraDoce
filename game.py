@@ -1018,7 +1018,7 @@ class Game(pygame.sprite.Sprite):
                 # Se acabou a fase
                 elif self.end:
                     self._write_reward()
-                    self._set_game_screen()
+                    self._set_level_screen()
 
         # Cria o background da fase
         background = pygame.Surface(self.screen.get_size())
