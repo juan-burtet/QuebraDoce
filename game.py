@@ -50,9 +50,15 @@ MODE_COLORS['MIX'] = PURPLE
 Conjunto de fases Testes
 '''
 TEST_MAPS = [
+<<<<<<< HEAD
     "levels/75_75_points_protection_objective.csv",
     "levels/50_50_points_protection_objective.csv",
     "levels/25_25_points_protection_objective.csv"
+=======
+    "levels/0.75_0.75.csv",
+    "levels/0.5_0.50.csv",
+    "levels/0.25_0.25.csv"
+>>>>>>> 219725d69ca5e4887c944d167cd37c14bd4c1ab6
 ]
 
 

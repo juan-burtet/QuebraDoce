@@ -26,17 +26,22 @@ class QuebraDoceGenerator:
             )
 
     def generate_moves(self):
-        return random.randint(5, 40)
+        return random.randint(5, 30)
     
     def generate_types(self):
         return random.randint(4, 6)
     
     def generate_points(self, types):
+<<<<<<< HEAD
         if self.points:
             x = abs(types - 6)
             return random.randint(0, 100000 + x*20000)
         else:
             return 0
+=======
+        x = abs(types - 6)
+        return random.randint(0, 999999999)
+>>>>>>> 219725d69ca5e4887c944d167cd37c14bd4c1ab6
 
     # Gera um mapa aleatório
     def _random_level(self):
@@ -423,8 +428,20 @@ class QuebraDoceGenerator:
         print("Arquivo -%s- gerado!" % file_name)
         print("--------------------\n")
 
+<<<<<<< HEAD
 for x in [0.85, 0.95]:
     print("Tentando gerar um mapa com target =", x)
     print()
     generator = QuebraDoceGenerator(25, 10, 0.75, 0.01)
     generator.generate_level(x, blocks=True, canes=True, points=True)
+=======
+
+
+for x in [0.5, 0.8]:
+    print("Tentando gerar um mapa com target =", x)
+    print() 
+    generator = QuebraDoceGenerator(25, 10, 0.9, 0.3)
+    generator.generate_level(x)
+
+
+>>>>>>> 219725d69ca5e4887c944d167cd37c14bd4c1ab6

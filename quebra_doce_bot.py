@@ -288,7 +288,14 @@ def _pick_a_level():
     onlyfiles.append(None)
     return onlyfiles
 
-# for level in _pick_a_level():
+
+# MAPS = [
+#     "levels/0.25_0.25.csv",
+#     "levels/0.5_0.50.csv",
+#     "levels/0.75_0.75.csv"
+# ]
+
+# for level in MAPS:
 #     FILE = level
 #     for moves in [1,3,5,10]:
 #         print("----------")

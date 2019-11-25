@@ -3,6 +3,7 @@ With 1 possible moves
 In the Level: None
 
 Total Plays: 100
+<<<<<<< HEAD
 Total Wins: 1
 Total reward: 90.55890804597702
 Win/Ratio: 0.01
@@ -12,3 +13,14 @@ Max points: 111180
 Min points: 25600
 Mean: 50182.2
 Tempo Total: 36.711153507232666
+=======
+Total Wins: 0
+Total reward: 15.728576625821065
+Win/Ratio: 0.0
+Reward/Ratio: 0.15728576625821064
+Evaluate: 0.15728576625821064
+Max points: 74100
+Min points: 21960
+Mean: 38807.6
+Tempo Total: 8.40355396270752
+>>>>>>> 219725d69ca5e4887c944d167cd37c14bd4c1ab6
