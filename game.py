@@ -3,6 +3,7 @@ import numpy as np
 from pygame.locals import *
 from os import listdir
 from os.path import isfile, join
+import copy
 
 # Arquivos próprios
 import piece
@@ -49,9 +50,9 @@ MODE_COLORS['MIX'] = PURPLE
 Conjunto de fases Testes
 '''
 TEST_MAPS = [
-    "levels/1.csv",
-    "levels/2.csv",
-    "levels/3.csv"
+    "levels/75_75_points_protection_objective.csv",
+    "levels/50_50_points_protection_objective.csv",
+    "levels/25_25_points_protection_objective.csv"
 ]
 
 
@@ -100,13 +101,18 @@ class Game(pygame.sprite.Sprite):
             for event in self.events:
                 if event.type == pygame.QUIT: 
                     going = False
+                elif event.type == KEYDOWN and event.key == K_ESCAPE:
+                    self._set_start_screen()
 
+            # Escolhendo o Estado
             if self.status == 'start':
                 background = self._start_screen()
             elif self.status == 'game':
                 background = self._game_screen()
+            elif self.status == 'level':
+                background = self._level_screen()
 
-            # Draw Everything
+            # Pintando a tela
             self.screen.blit(background, (0, 0))
             pygame.display.flip()
 
@@ -195,13 +201,16 @@ class Game(pygame.sprite.Sprite):
     def _set_start_screen(self):
         self.status = 'start'
 
+    def _set_level_screen(self):
+        self.status = 'level'
+
     # Trabalha todas as operações da tela inicial
     def _start_screen(self):
         
         # Captura de eventos da tela inicial
         for event in self.events:
             if event.type == MOUSEBUTTONDOWN and event.button == 1:
-                self._set_game_screen()
+                self._set_level_screen()
 
         # Cria o plano de fundo
         background = pygame.Surface(self.screen.get_size())
@@ -232,6 +241,90 @@ class Game(pygame.sprite.Sprite):
                     text_size=20)
                 background.blit(texts[0], textpos[0])
                 background.blit(texts[1], textpos[1])
+
+        return background
+
+    def _level_screen(self):
+
+        # Cria o plano de fundo
+        background = pygame.Surface(self.screen.get_size())
+        background = background.convert()
+        background.fill(GREEN)
+
+        levels = []
+
+        # Coloca as letras na tela com sombreamento
+        if pygame.font:
+            
+            # SELECT LEVEL
+            texts, textpos = self._add_nes_text(
+                "SELECT LEVEL",
+                text_size=70,
+                top=0)
+            background.blit(texts[0], textpos[0])
+            background.blit(texts[1], textpos[1])
+
+            # Desenha uma linha que separa os niveis
+            pygame.draw.line(
+                background, 
+                WHITE, 
+                (textpos[1].bottomleft), 
+                (textpos[1].bottomright), 
+                2
+            )
+
+            # Adiciona todas as palavras
+            for i in [1, 2, 3]:
+                string = "LEVEL %d" % i
+
+                i -= 2
+
+                # LEVEL i
+                texts, textpos = self._add_nes_text(
+                    string,
+                    text_size=60,
+                    top=size[1]/2 + i*80)
+                background.blit(texts[0], textpos[0])
+                background.blit(texts[1], textpos[1])
+
+                rect = copy.deepcopy(textpos[0])
+                rect.width += 15
+                rect.height -= 15
+
+                rect.topleft = textpos[0].topleft
+                rect.left -= 10
+                rect.top += 10
+
+                # Caixa onde fica o modo de jogo
+                pygame.draw.rect(
+                    background,
+                    WHITE,
+                    rect,
+                    5
+                )
+
+                levels.append(textpos[0])
+
+        # Captura de eventos da tela inicial
+        for event in self.events:
+            if event.type == MOUSEBUTTONDOWN and event.button == 1:
+                
+                # Posição do mouse
+                pos = pygame.mouse.get_pos()
+
+                # Percorre por todas as peças no campo
+                find = False
+                for i, l in enumerate(levels):
+                    
+                    # Verifica se houve colisão
+                    if l.collidepoint(pos):
+                        self.level = i
+                        find = True
+                        break
+                
+                # Se não encontrou, tira a peça
+                if find:
+                    self._set_game_screen()
 
         return background
 
@@ -825,6 +918,69 @@ class Game(pygame.sprite.Sprite):
         for t, p in zip(texts,pos):
             background.blit(t,p)
 
+    # Retorna os rewards dos canes
+    def get_reward_canes(self):
+        canes = self.board.get_canes_reward()
+        value = self.objectives - len(canes)
+
+        # Adiciona os valores
+        for c in canes:
+            value += c
+
+        return float(value/self.objectives)
+
+    # Pega o reward da partida
+    def get_reward(self):
+        p_blocks = 1
+        p_canes = 1
+        p_points = 1
+
+        count = 0
+        total = 0
+
+        # self.blocks, self.board.blocks
+        if self.blocks > 0:
+            if self.blocks != self.board.blocks:
+                blocks = 1/(self.blocks/(self.blocks - self.board.blocks))
+            else:
+                blocks = 0
+            total += blocks
+            count += p_blocks
+        
+        #self.objectives, self.board.canes
+        if self.objectives > 0:
+            total += self.get_reward_canes()
+            count += p_canes
+
+        # Parece feito
+        if self.board.w_points > 0:
+            points = 0
+            if self.board.points >= self.board.w_points:
+                points = 1
+            else:
+                points = self.board.points/self.board.w_points
+            
+            total += points
+            count += p_points
+        
+        if count > 0:
+            return total/count
+        else:
+            return 1.0
+
+    # Escreve o reward no arquivo
+    def _write_reward(self):
+        r = self.get_reward()
+
+        i = self.level +1
+        filename = "information/%d.txt" % i
+        f = open(filename, "a+")
+
+        string = "\n" + str(r)
+        f.write(string)
+
+        f.close()
+
     # Trabalha todas as operação da tela do jogo    
     def _game_screen(self):
         
@@ -833,7 +989,6 @@ class Game(pygame.sprite.Sprite):
             
             # Apertou com o mouse (botão esquerdo)
             if event.type == MOUSEBUTTONDOWN and event.button == 1:
-                
 
                 # Só aceita movimentos se não tiver mensagem na tela
                 if self.round_info is None and not self.end:
@@ -862,14 +1017,8 @@ class Game(pygame.sprite.Sprite):
                 
                 # Se acabou a fase
                 elif self.end:
-                    if self.win:
-                        self.level += 1
-                    
-                    if self.level <= 2:
-                        self._set_game_screen()
-                    else:
-                        self.level = 0
-                        self._set_start_screen()
+                    self._write_reward()
+                    self._set_game_screen()
 
         # Cria o background da fase
         background = pygame.Surface(self.screen.get_size())

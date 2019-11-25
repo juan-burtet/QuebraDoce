@@ -1,42 +1,19 @@
-import multiprocessing as mp
-import random
-from multiprocessing import Lock, Process, Queue, current_process
-import queue
+# import quebra_doce_bot as ia
 
-class Foo:
-    
+# level = "levels/75_75_points_protection_objective.csv"
+# FILE = level
+# print("----------")
+# print("%s -> %d" % (FILE, 1))
+# print("----------")
 
-    def jar(self, i, results):
-        data = {}
+# x = []
+# for i in range(10):
+#     print("#%d " % i, end="")
+#     bot = ia.QuebraDoceAI(file=level)
+#     y = bot.do_playouts(n=250, n_moves=1, info=False, final=True)
+#     print(y)
+#     x.append(y)
 
-        data['Oi'] = random.randint(0, 5)
-        data['Tchau'] = random.randint(0, 5)
-
-        print("Processo:", i)
-        print("Oi:", data['Oi'])
-        print("Tchau", data['Tchau'])
-
-        #r = data
-        results.put((i, data))
-        return i
-
-    def bar(self):
-        self.results = Queue()
-        procs = []
-        for i in range(mp.cpu_count()):
-
-            proc = Process(target=self.jar, args=(i,self.results))
-            procs.append(proc)
-            proc.start()
-            
-        for proc in procs:
-            print(proc.join())
-
-foo = Foo()
-foo.bar()
-results = foo.results
-while not results.empty():
-    q = results.get()
-    print(q[0])
-    print(q[1])
-    print("")
+# print("\nValores resultantes")
+# for v in x:
+#     print("[%.2f, %.2f]" % (v[0], v[1]))

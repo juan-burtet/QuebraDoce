@@ -32,9 +32,20 @@ class QuebraDoceAI:
     def get_board(self):
         return board.Board(file=self.file, string=self.map_string)
 
+    # Retorna os rewards dos canes
+    def get_reward_canes(self, board):
+        canes = board.get_canes_reward()
+        value = self.canes - len(canes)
+
+        # Adiciona os valores
+        for c in canes:
+            value += c
+
+        return float(value/self.canes)
+
     def get_reward(self, board):
-        p_blocks = 3
-        p_canes = 3
+        p_blocks = 1
+        p_canes = 1
         p_points = 1
 
         count = 0
@@ -48,12 +59,7 @@ class QuebraDoceAI:
             count += p_blocks
         
         if self.canes > 0:
-            if self.canes != board.canes:
-                canes = 1/(self.canes/(self.canes - board.canes))
-            else:
-                canes = 0
-            
-            total += canes
+            total += self.get_reward_canes(board)
             count += p_canes
 
         if self.w_points > 0:
@@ -160,15 +166,12 @@ class QuebraDoceAI:
         print("")
 
     def _evaluate(self):
-        p1, p2 = 3, 1
-        win_ratio = float(self.wins/self.plays) * p1
-        reward_ratio = float(self.rewards/self.plays) * p2
-        total = p2
-        if win_ratio > 0:
-            total += p1
-        return (win_ratio+reward_ratio)/total
+        w = float(self.wins/self.plays)
+        r = float(self.rewards/self.plays)
 
-    def do_playouts(self, n=100, n_moves=1, info=True):
+        return r
+
+    def do_playouts(self, n=100, n_moves=1, info=True, final=False):
         board = self.get_board()
         self.w_points = board.w_points
         self.blocks = board.blocks
@@ -244,7 +247,7 @@ class QuebraDoceAI:
             #print("Mapa inválido!")
             return 0
 
-        if info:
+        if info or final:
             print("Total Plays:", self.plays)
             print("Total Wins:", self.wins)
             print("Total reward:", self.rewards)
@@ -293,3 +296,21 @@ def _pick_a_level():
 #         print("----------")
 #         bot = QuebraDoceAI(None)
 #         bot.do_playouts(n=100, n_moves=moves)
+
+# level = "levels/10_0_points_protection_objective.csv"
+# FILE = level
+# print("----------")
+# print("%s -> %d" % (FILE, 1))
+# print("----------")
+
+# x = []
+# for i in range(10):
+#     print("#%d " % i, end="")
+#     bot = QuebraDoceAI(file=level)
+#     y = bot.do_playouts(n=250, n_moves=1, info=False, final=True)
+#     print(y)
+#     x.append(y)
+
+# print("\nValores resultantes")
+# for v in x:
+#     print("[%.2f, %.2f, %.2f]" % (v[0], v[1], v[2]))

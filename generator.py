@@ -10,7 +10,7 @@ class QuebraDoceGenerator:
         self.pop_size = pop_size
         self.crossover_rate = crossover_rate
         self.mutation_rate = mutation_rate
-        self.n_simulations = 75
+        self.n_simulations = 100
         self.n_moves = 1
         self.bias = 0.00
         self.best_distance = 1.0
@@ -32,8 +32,11 @@ class QuebraDoceGenerator:
         return random.randint(4, 6)
     
     def generate_points(self, types):
-        x = abs(types - 6)
-        return random.randint(0, 100000 + x*20000)
+        if self.points:
+            x = abs(types - 6)
+            return random.randint(0, 100000 + x*20000)
+        else:
+            return 0
 
     # Gera um mapa aleatório
     def _random_level(self):
@@ -54,17 +57,19 @@ class QuebraDoceGenerator:
         string += str(types) + "\n"
 
         # Generate the Level
-        max = 3
+        pieces = None
         for i in range(9):
             
             # Se não for a primeira linha, diminui o max
             if i > 0:
-                max = 2 
+                pieces = self.pieces
+            else:
+                pieces = self.first_pieces
             
             for j in range(9):
 
                 # Gera a peça
-                p = random.randint(0, max)
+                p = random.choice(pieces)
                 string += str(p)
 
                 # Se não for a ultima peça, adiciona a ','
@@ -102,9 +107,7 @@ class QuebraDoceGenerator:
             for i in range(len(line_1)):
                 x = int(line_1[i])
                 y = int(line_2[i])
-                a = min(x, y)
-                b = max(x, y)
-                value = random.randint(a,b)
+                value = random.choice([x, y])
                 string += str(value)
                 if i != 2:
                     string += ","
@@ -117,8 +120,7 @@ class QuebraDoceGenerator:
                 for j in range(len(line_1)):
                     if line_1[j] != ",":
                         x, y = int(line_1[j]), int(line_2[j])
-                        a, b = min(x,y), max(x,y)
-                        value = random.randint(a,b)
+                        value = random.choice([x, y])
                         string += str(value)
                     else:
                         string += ","
@@ -130,7 +132,7 @@ class QuebraDoceGenerator:
         else:
             child = min(pop, key=lambda x:x['distance'])
             child = child['level']
-        
+
         return child
 
     # Muta um nivel
@@ -174,20 +176,22 @@ class QuebraDoceGenerator:
         string += str(types) + "\n"
 
         # Escreve o mapa
-        max = 3
+        ps = None
         for i in range(1, 10):
             line = lines[i]
             pieces = line.split(",")
 
-            # Se o max for maior
+            # Se for depois da primeira linha
             if i > 1:
-                max = 2
+                ps = self.pieces
+            else:
+                ps = self.first_pieces
 
             # Percorre uma linha
             for j in range(len(pieces)):
                 p = 0
                 if random.uniform(0.0, 1.0) <= mutation_rate:
-                    p = random.randint(0, max)
+                    p = random.choice(ps)
                 else:
                     p = pieces[j]
                 
@@ -205,7 +209,7 @@ class QuebraDoceGenerator:
         # Decide o limite dos melhores
         limit = 10
         if self.pop_size < limit:
-            limit = pop_size
+            limit = self.pop_size
 
         # Pega os melhores
         pop.sort(key=lambda x: x['distance'])
@@ -254,7 +258,9 @@ class QuebraDoceGenerator:
         return pop
 
     # Gera um mapa com o target desejado
-    def generate_level(self, target, n_generations=100):
+    def generate_level(self, target, n_generations=100,
+            points=False, blocks=False, canes=False):
+
         invalid = False
 
         start = time.time()
@@ -266,20 +272,29 @@ class QuebraDoceGenerator:
             invalud = True
         elif target < self.bias:
             invalid = True
-        
+        elif (not points) and (not blocks) and (not canes):
+            invalid = True
+
         # Não é possivel gerar
         if invalid:
             return False
 
-        # Gera uma população inicial
-        pop = []
-        for i in range(self.pop_size):
-            data = {
-                'level': self._random_level(),
-                'evaluate': 0.0,
-                'distance': 1.0}
-            pop.append(data)
-        
+        # Inicializa as peças
+        self.first_pieces = [0, 1]
+        self.pieces = [0, 1]
+
+        # Inicializa os modos
+        self.points = points
+        self.blocks = blocks
+        self.canes = canes
+
+        if blocks:
+            self.first_pieces.append(2)
+            self.pieces.append(2)
+
+        if canes:
+            self.first_pieces.append(3)
+
         # Percorre tantas gerações
         target_level = None
         print("--------------------\n")
@@ -289,17 +304,26 @@ class QuebraDoceGenerator:
         print("--------------------\n")
         found = False
 
-        # Avalia as populações originais
+        # Gera uma população inicial
+        pop = []
         print("[", end="")
-        for p in pop:
-            p['evaluate'] = self._evaluate_content(p['level'])
-            p['distance'] = abs(p['evaluate'] - target)
-            print("%.2f" % p['evaluate'], end="")
-            print(",", end="")
+        for i in range(self.pop_size):
+
+            l = self._random_level()
+            val = self._evaluate_content(l)
+            d = abs(val - target)
+            
+            print("%.2f," % val, end="")
+
+            data = {
+                'level': l,
+                'evaluate': val,
+                'distance': d}
+            pop.append(data)
         print("]")
 
         # Inicializa o bias
-        self.bias = 0.00
+        self.bias = 0.005
 
         # Inicializa a melhor distância
         self.best_distance = 1.0
@@ -366,11 +390,31 @@ class QuebraDoceGenerator:
         with open(file_name, "w+") as f:
             f.write("Tempo: %.2fs" % t)
 
+    def _get_type_file(self):
+        string = ""
+        count = 0
+        if self.points:
+            count += 1
+            string += "points"
+        if self.blocks:
+            count += 1
+            if count > 1:
+                string += "_"
+            string += "protection"
+        if self.canes:
+            count += 1
+            if count > 1:
+                string += "_"
+            string += "objective"
+        
+        return string
+
     def _create_file(self, target, level):
         file_name = ''
         file_name += "levels/"
-        file_name += str(target) + "_"
-        file_name += "%.2f" % level['evaluate']
+        file_name += str(int(target*100)) + "_"
+        file_name += str(int(level['evaluate'] * 100)) + "_"
+        file_name += self._get_type_file()
         file_name += ".csv"
 
         with open(file_name, "w+") as f:
@@ -379,10 +423,8 @@ class QuebraDoceGenerator:
         print("Arquivo -%s- gerado!" % file_name)
         print("--------------------\n")
 
-for x in [0.25, 0.50, 0.75]:
+for x in [0.85, 0.95]:
     print("Tentando gerar um mapa com target =", x)
     print()
     generator = QuebraDoceGenerator(25, 10, 0.75, 0.01)
-    generator.generate_level(x)
-
-
+    generator.generate_level(x, blocks=True, canes=True, points=True)

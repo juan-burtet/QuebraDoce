@@ -86,6 +86,19 @@ class Board(pygame.sprite.Sprite):
             print("")
         print("")
 
+    # Retorna o quanto cada cane está pra ser completo
+    def get_canes_reward(self):
+        canes = []
+
+        level = self.map
+        for i, row in enumerate(level):
+            for j, p in enumerate(row):
+                if self.labels[j][i] == 3:
+                    x = i/8
+                    canes.append(x)
+        
+        return canes
+
     # Retorna o estado do random
     def get_random_state(self):
         if self.state is None:
@@ -293,6 +306,9 @@ class Board(pygame.sprite.Sprite):
                     while(check):
                         self.level[x][y] = piece.Simple(x,y,self.types)
                         check = self._check_board(self.level)
+        
+        if not self._has_moves():
+            self._create_level(first=False)
 
     # Retorna uma lista com todas as peças
     def get_board(self):
