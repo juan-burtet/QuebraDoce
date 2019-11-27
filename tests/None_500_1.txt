@@ -3,12 +3,12 @@ With 1 possible moves
 In the Level: None
 
 Total Plays: 500
-Total Wins: 0
-Total reward: 385.75627970128994
-Win/Ratio: 0.0
-Reward/Ratio: 0.7715125594025799
-Evaluate: 0.7715125594025799
-Max points: 53280
-Min points: 16980
-Mean: 31976.56
-Tempo Total: 34.446775674819946
+Total Wins: 1
+Total reward: 383.08890586105457
+Win/Ratio: 0.002
+Reward/Ratio: 0.7661778117221092
+Evaluate: 0.7661778117221092
+Max points: 52280
+Min points: 16620
+Mean: 31630.88
+Tempo Total: 158.07896780967712

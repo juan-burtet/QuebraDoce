@@ -287,37 +287,3 @@ def _pick_a_level():
     onlyfiles = [join(mypath, f) for f in listdir(mypath) if isfile(join(mypath, f))]
     onlyfiles.append(None)
     return onlyfiles
-
-
-# MAPS = [
-#     "levels/0.25_0.25.csv",
-#     "levels/0.5_0.50.csv",
-#     "levels/0.75_0.75.csv"
-# ]
-
-# for level in MAPS:
-#     FILE = level
-#     for moves in [1,3,5,10]:
-#         print("----------")
-#         print("%s -> %d" % (FILE, moves))
-#         print("----------")
-#         bot = QuebraDoceAI(None)
-#         bot.do_playouts(n=100, n_moves=moves)
-
-# level = "levels/10_0_points_protection_objective.csv"
-# FILE = level
-# print("----------")
-# print("%s -> %d" % (FILE, 1))
-# print("----------")
-
-# x = []
-# for i in range(10):
-#     print("#%d " % i, end="")
-#     bot = QuebraDoceAI(file=level)
-#     y = bot.do_playouts(n=250, n_moves=1, info=False, final=True)
-#     print(y)
-#     x.append(y)
-
-# print("\nValores resultantes")
-# for v in x:
-#     print("[%.2f, %.2f, %.2f]" % (v[0], v[1], v[2]))
