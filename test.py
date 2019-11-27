@@ -1,26 +1,32 @@
-import quebra_doce_bot as ia
+import statistics as st
 
-level = "levels/75_75_points_protection_objective.csv"
-FILE = level
-print("----------")
-print("%s -> %d" % (FILE, 1))
-print("----------")
+filename = "tests/rewards_for_simulations.csv"
 
-x = []
-times = []
+labels = [10, 25, 50, 100, 250, 500]
 
-    
-for i in range(10):
-    print(i, "-> ", end="")
-    for n in [500]:
-        bot = ia.QuebraDoceAI(file=level)
-        y = bot.do_playouts(n=n, n_moves=1, info=False, final=True)
-        
+data = {
+    i:[] for i in labels
+}
+
+with open(filename, "r+") as f:
+    lines = f.readlines()
+
+    for i, line in enumerate(lines):
         if i == 0:
-            times.append(y[1])
+            continue
 
-        print("- %.3f - " % y[0], end="")
-    print("")
+        info = line.split(",")
 
-print(times)
+        info = info[1:]
 
+        for i, a in enumerate(info):
+            data[labels[i]].append(float(a))
+
+            pass
+
+    pass
+
+print("Desvio padrão para cada simulação:")
+for key, value in data.items():
+    dp = st.stdev(value)
+    print("%s: %f" % (key, dp))
