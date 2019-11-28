@@ -74,7 +74,7 @@
 #     print(r)
 
 
-import quebra_doce_bot as bot
+import board
 
 
 maps = [
@@ -83,7 +83,20 @@ maps = [
     "levels/95_95_points_protection_objective.csv"
 ]
 
-for m in maps:
+values = [0, 0, 0]
 
-    ia = bot.QuebraDoceAI(file=m)
-    print(ia.do_playouts(info=False, final=True))
+size = 1000
+
+for n in range(size):
+    if n % 50 == 0:
+        print("[%d/%d]" % (n, size))
+
+    for i, m in enumerate(maps):
+        b = board.Board(file=m)
+        moves = b.possible_moves()
+        values[i] += len(moves)
+
+for i, v in enumerate(values):
+    x = v/size
+    print("Mapa %d: %f" % (i, x))
+    pass
